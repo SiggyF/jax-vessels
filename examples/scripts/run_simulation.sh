@@ -67,9 +67,8 @@ blockMesh | tee log.blockMesh && \
 surfaceFeatureExtract | tee log.surfaceFeatureExtract && \
 snappyHexMesh -overwrite | tee log.snappyHexMesh && \
 checkMesh | tee log.checkMesh"
-# interFoam | tee log.interFoam (Excluded for fast check)
 
-echo "Running Docker container..."
+echo "Running Docker container for meshing..."
 docker run --rm \
     -v "$OUT":/data \
     "$IMAGE" \
@@ -77,8 +76,23 @@ docker run --rm \
 
 echo "-------------------------------------------------------"
 if [ $? -eq 0 ]; then
-    echo "Simulation (Meshing) Completed Successfully."
+    echo "Meshing Completed Successfully."
 else
-    echo "Simulation Failed."
+    echo "Meshing Failed."
+    exit 1
+fi
+
+# 4. Run Solver
+echo "Running interFoam..."
+docker run --rm \
+    -v "$OUT:/data" \
+    "$IMAGE" \
+    interFoam -case /data >> "$OUT/log.interFoam" 2>&1
+
+echo "-------------------------------------------------------"
+if [ $? -eq 0 ]; then
+    echo "Simulation (interFoam) Completed Successfully."
+else
+    echo "Simulation (interFoam) Failed."
     exit 1
 fi
