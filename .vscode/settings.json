@@ -1,0 +1,26 @@
+{
+    "files.associations": {
+        "controlDict": "cpp",
+        "fvSchemes": "cpp",
+        "fvSolution": "cpp",
+        "blockMeshDict": "cpp",
+        "snappyHexMeshDict": "cpp",
+        "surfaceFeatureExtractDict": "cpp",
+        "transportProperties": "cpp",
+        "turbulenceProperties": "cpp",
+        "setFieldsDict": "cpp",
+        "g": "cpp",
+        "U": "cpp",
+        "p": "cpp",
+        "p_rgh": "cpp",
+        "alpha.water": "cpp",
+        "nut": "cpp",
+        "k": "cpp",
+        "omega": "cpp",
+        "*.foam": "cpp"
+    },
+    "[cpp]": {
+        "editor.formatOnSave": false,
+        "editor.defaultFormatter": null
+    }
+}

@@ -1,0 +1,87 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     |
+    \\  /    A nd           | Website:  www.openfoam.com
+     \\/     M anipulation  |
+\*---------------------------------------------------------------------------*/
+FoamFile {
+  version 2.0;
+  format ascii;
+  class dictionary;
+  location "system";
+  object fvSchemes;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+// Time evolution schemes (d/dt)
+ddtSchemes {
+  default Euler; // First order, bounded, implicit. Stable but diffusive.
+}
+
+// Gradient schemes (grad)
+gradSchemes {
+  default Gauss linear; // Second order, central differencing.
+}
+
+// Divergence schemes (div)
+// Convection of dependent variables
+divSchemes {
+  default none; // Fail if a term is not explicitly defined
+
+  // Convection of Velocity: div(rho*phi, U)
+  // linearUpwind: Second order upwind scheme. Less diffusive than standard
+  // upwind.
+  "div(rhoPhi,U)" Gauss linearUpwind grad(U);
+
+  // Convection of Phase Fraction: div(phi, alpha)
+  // vanLeer: TVD (Total Variation Diminishing) scheme preserves bounds (0-1).
+  "div(phi,alpha)" Gauss vanLeer;
+
+  // Interface Compression: div(phirb, alpha)
+  // interfaceCompression: Artificial compression to sharpen the interface.
+  "div(phirb,alpha)" Gauss interfaceCompression;
+
+  // Viscous Stresses (Turbulence/Laminar)
+  // div(T) terms usually use Gauss linear (Central differencing)
+  "div(((rho*nuEff)*dev2(T(grad(U)))))" Gauss linear;
+  "div((muEff*dev2(T(grad(U)))))" Gauss linear;
+
+  // Convection of Turbulence Quantities (k, omega)
+  // upwind: First order. Very stable, ensures boundedness of k and omega.
+  "div(phi,k)" Gauss upwind;
+  "div(phi,omega)" Gauss upwind;
+}
+
+// Laplacian schemes (Diffusion: div(Gamma grad(phi)))
+laplacianSchemes {
+  // Gauss linear corrected: Second order central with non-orthogonal
+  // correction. Necessary for non-perfect hexahedral meshes.
+  default Gauss linear corrected;
+}
+
+// Interpolation schemes (Cell center to Face center)
+interpolationSchemes {
+  default linear; // Linear interpolation (Central differencing).
+}
+
+// Surface Normal Gradient schemes (Sn = n . grad(phi) at face)
+snGradSchemes {
+  default corrected; // Explicit non-orthogonal correction.
+}
+
+// Flux Calculation Requirements
+fluxRequired {
+  default no;
+  p_rgh;       // Dynamic pressure requires flux for PISO/PIMPLE loop
+  pcorr;       // Correction pressure
+  alpha.water; // Phase fraction for VOF interface tracking
+}
+
+// Wall Distance Calculation
+wallDist {
+  method meshWave; // Wave propagation method to calculate distance to nearest
+                   // wall.
+}
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

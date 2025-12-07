@@ -108,14 +108,10 @@ We recommend using Docker to ensure a consistent OpenFOAM environment with all d
     docker run --rm -it \
         -v $(pwd):/app \
         jax-vessels \
-        examples/hulls/simple_box.stl --out-dir analysis_runs
-    docker run --rm -it \
-        -v $(pwd):/app \
-        jax-vessels \
-        examples/hulls/simple_box.stl --out-dir analysis_runs
+        run-analysis examples/hulls/simple_box.stl --out-dir analysis_runs
     ```
-    *   **Default Behavior**: If you run `docker run jax-vessels` without arguments, it displays the help message (due to `CMD ["--help"]` in the Dockerfile).
-    *   **Arguments**: Provide the path to one or more STL files to start the analysis pipeline.
+    *   **Note**: We purposely invoke the `run-analysis` script explicitly.
+    *   **Arguments**: Provide the path to one or more STL files.
 
     This will:
     *   Setup the case.
@@ -129,11 +125,18 @@ We recommend using Docker to ensure a consistent OpenFOAM environment with all d
     ```
 
 ### Manual Execution in Docker
-If you want to run specific OpenFOAM commands manually:
+If you want to run specific OpenFOAM commands manually (debugging):
 ```bash
-docker run --rm -it -v $(pwd):/app --entrypoint /bin/bash jax-vessels
-# Inside container:
-# source /usr/lib/openfoam/openfoam*/etc/bashrc  (Already sourced if using wrapper, but good to know)
+# Start a shell with OpenFOAM environment sourced
+docker run --rm -it -v $(pwd):/app jax-vessels run-analysis bash
+```
+Then, inside the container:
+```bash
+# Example: Run explicit steps on a test case
+cd simulations/my_test_case
+blockMesh
+checkMesh
+foamToVTK
 ```
 
 ## Example Hulls

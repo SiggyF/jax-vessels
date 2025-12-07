@@ -1,0 +1,98 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     |
+    \\  /    A nd           | Website:  www.openfoam.com
+     \\/     M anipulation  |
+\*---------------------------------------------------------------------------*/
+FoamFile {
+  version 2.0;
+  format ascii;
+  class dictionary;
+  location "system";
+  object fvSolution;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+solvers {
+  // Phase Fraction Solver (VOF)
+  "alpha.water.*" {
+    nAlphaCorr 1;      // Number of corrections per time step
+    nAlphaSubCycles 2; // Number of sub-cycles for alpha transport (improves
+                       // stability)
+    cAlpha 1;          // Compression coefficient (1 = active compression)
+
+    MULESCorr yes;  // Use MULES correction
+    nLimiterIter 3; // Iterations for the limiter
+
+    solver smoothSolver; // Standard smooth solver
+    smoother symGaussSeidel;
+    tolerance 1e-8; // High precision for phase fraction
+    relTol 0;       // Absolute tolerance only
+  }
+
+  // Dynamic Pressure Solver (p_rgh = p - rho*g*h)
+  "p_rgh.*" {
+    solver GAMG; // Geometric-Algebraic Multi-Grid (Efficient for elliptic eqn)
+    tolerance 1e-7;
+    relTol 0.01; // Relative tolerance for inner loops
+    smoother GaussSeidel;
+    cacheAgglomeration true;
+    nCellsInCoarsestLevel 10;
+    agglomerator faceAreaPair;
+    mergeLevels 1;
+  }
+
+  // Velocity Solver
+  "U.*" {
+    solver smoothSolver;
+    smoother symGaussSeidel;
+    tolerance 1e-06;
+    relTol 0;
+  }
+
+  // Final loops often require tighter tolerances
+  p_rghFinal {
+    $p_rgh; // Inherit settings from p_rgh
+    tolerance 1e-06;
+    relTol 0; // Force convergence to absolute tolerance
+  }
+
+  pcorr {
+    $p_rgh;
+    tolerance 1e-05;
+    relTol 0;
+  }
+
+  pcorrFinal {
+    $p_rgh;
+    tolerance 1e-06;
+    relTol 0;
+  }
+
+  U {
+    solver smoothSolver;
+    smoother GaussSeidel;
+    tolerance 1e-05;
+    relTol 0.1;
+    nSweeps 1;
+  }
+
+  // Turbulence Quantity Solvers
+  "(k|omega).*" {
+    solver smoothSolver;
+    smoother symGaussSeidel;
+    tolerance 1e-06;
+    relTol 0;
+  }
+}
+
+// PIMPLE Algorithm Control (PISO + SIMPLE)
+PIMPLE {
+  momentumPredictor no; // Skip momentum predictor (often better for multiphase)
+  nOuterCorrectors 1;   // Number of outer loops (1 = PISO mode)
+  nCorrectors 3;        // Number of pressure corrections per outer loop
+  nNonOrthogonalCorrectors 0; // Orthogonality corrections (0 for good mesh)
+}
+
+// ************************************************************************* //

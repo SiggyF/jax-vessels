@@ -54,30 +54,33 @@ maxDeltaT 1; // Upper limit for DeltaT
 
 // Function objects for runtime post-processing
 functions {
-  forces {
-    type forces;
-    libs("libforces.so");
-    writeControl timeStep;
-    writeInterval 1;
+  forces
+  {
+    type            forces;
+    libs            ( "libforces.so" );
+    writeControl    timeStep;
+    writeInterval   1;
 
-    patches(hull); // Patch to calculate forces on
-    p p_rgh;       // Pressure field name
-    U U;           // Velocity field name
-    rho rhoInf;    // Density field name
-    rhoInf 1025;   // Reference density (water)
-    CofR(50 0 5);  // Center of Rotation for moment calculations
+    patches         (hull);
+    p               p_rgh;
+    U               U;
+    rho             rhoInf;
+    rhoInf          1025;
+    CofR            (0 0 0);
   }
 
   // Wave probes alongside the hull to measure elevation
   waveProbes {
-    type probes;
-    libs("libsampling.so");
-    writeControl timeStep;
-    writeInterval 1;
-    fields(alpha.water p_rgh);
-    probeLocations((0 20 0)   // Amidships, 20m off centerline
-                   (50 20 0)  // Bow region
-                   (-50 20 0) // Stern region
+    type            probes;
+    libs            ( "libsampling.so" );
+    writeControl    timeStep;
+    writeInterval   1;
+    fields          ( p_rgh alpha.water );
+    probeLocations
+    (
+        ( 10 5 0 )
+        ( 10 6 0 )
+        ( 10 7 0 )
     );
   }
 }

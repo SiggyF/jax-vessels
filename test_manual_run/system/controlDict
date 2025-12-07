@@ -56,16 +56,13 @@ maxDeltaT 1; // Upper limit for DeltaT
 // Function objects for runtime post-processing
 functions {
   // Probe to verify water is still
-  velocityProbe
-  {
-    type            probes;
-    libs            ( "libsampling.so" );
-    writeControl    timeStep;
-    writeInterval   1;
-    fields          ( U p_rgh alpha.water );
-    probeLocations
-    (
-        ( 0 0 -5 )
+  velocityProbe {
+    type probes;
+    libs("libsampling.so");
+    writeControl timeStep;
+    writeInterval 1;
+    fields(U p_rgh alpha.water);
+    probeLocations((0 0 - 5) // Center of water volume
     );
   }
 }

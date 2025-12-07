@@ -56,15 +56,18 @@ maxDeltaT 1; // Upper limit for DeltaT
 // Function objects for runtime post-processing
 functions {
   // Probes to track wave propagation along X-axis
-  waveProbes {
-    type probes;
-    libs("libsampling.so");
-    writeControl timeStep;
-    writeInterval 1;
-    fields(alpha.water U);
-    probeLocations((-50 0 0.5) // Just downstream of wave generation
-                   (0 0 0.5)   // Middle of tank
-                   (50 0 0.5)  // Downstream
+  waveProbes
+  {
+    type            probes;
+    libs            ( "libsampling.so" );
+    writeControl    timeStep;
+    writeInterval   1;
+    fields          ( alpha.water U );
+    probeLocations
+    (
+        ( -50 0 0.5 ) // Just downstream of wave generation
+        ( 0 0 0.5 )   // Middle of tank
+        ( 50 0 0.5 )  // Downstream
     );
   }
 }
