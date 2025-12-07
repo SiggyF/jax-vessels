@@ -296,7 +296,8 @@ def setup_geonodes(hull_obj):
     
     v2m = tree.nodes.new('GeometryNodeVolumeToMesh')
     v2m.location = (400, 0)
-    v2m.inputs['Adaptivity'].default_value = 0.05
+    # User requested Adaptivity 0.1
+    v2m.inputs['Adaptivity'].default_value = 0.1
     links.new(m2v.outputs[0], v2m.inputs[0])
     
     shade = tree.nodes.new('GeometryNodeSetShadeSmooth')
@@ -322,9 +323,14 @@ def main():
     
     setup_geonodes(hull)
     
-    # Add Decimate Modifier for simplification
-    mod_dec = hull.modifiers.new(name="Simplify", type='DECIMATE')
-    mod_dec.ratio = 0.5 # Simplify by 50%
+    # CFD/Simulation Topology Improvement
+    # Use Remesh (Structured Quads) for simulation-friendly topology
+    
+    mod_remesh = hull.modifiers.new(name="Remesh", type='REMESH')
+    mod_remesh.mode = 'VOXEL'
+    mod_remesh.voxel_size = 0.5 # 0.5m grid
+    mod_remesh.adaptivity = 0.0 # Modifier adaptivity (if available) usually 0 for uniform grid
+    mod_remesh.use_smooth_shade = True
     
     # Set Defaults in Modifier explicitly
     mod_gn = hull.modifiers["HullGen"]
