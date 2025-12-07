@@ -13,33 +13,37 @@ FoamFile {
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-dimensions      [ 0 0 0 0 0 0 0];
+dimensions[0 0 0 0 0 0 0]; // Dimensionless phase fraction [0-1]
 
-internalField uniform 0;
+internalField uniform 0; // Initialize as Air (0)
 
 boundaryField {
   inlet {
     type fixedValue;
-    value uniform 0; // Set by setFields
+    value uniform 0; // Typically set by setFields utility later
   }
 
   outlet {
-    type zeroGradient; // or inletOutlet
+    type zeroGradient; // Allow phase to leave domain without reflection
   }
 
-  bottom { type symmetryPlane; }
+  bottom {
+    type symmetryPlane;
+  } // Symmetry: Zero normal gradient, zero flux (mirrors scalar field)
 
   top {
-    type inletOutlet;
-    inletValue uniform 0;
+    type inletOutlet;     // Air can enter/leave, water leaves only
+    inletValue uniform 0; // Pure air enters if backflow
     value uniform 0;
   }
 
-  side_left { type symmetryPlane; }
+  side_left { type symmetryPlane; } // Symmetry: Zero normal gradient, zero flux
 
-  side_right { type symmetryPlane; }
+  side_right {
+    type symmetryPlane;
+  } // Symmetry: Zero normal gradient, zero flux
 
-  hull { type zeroGradient; }
+  hull { type zeroGradient; } // No flux through wall (impermeable)
 }
 
 // ************************************************************************* //

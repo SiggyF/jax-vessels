@@ -5,23 +5,21 @@
     \\  /    A nd           | Website:  www.openfoam.com
      \\/     M anipulation  |
 \*---------------------------------------------------------------------------*/
-FoamFile
-{
-    version     2.0;
-    format      ascii;
-    class       dictionary;
-    location    "constant";
-    object      turbulenceProperties;
+FoamFile {
+  version 2.0;
+  format ascii;
+  class dictionary;
+  location "constant";
+  object turbulenceProperties;
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-simulationType  RAS;
+simulationType RAS; // Reynolds-Averaged Simulation
 
-RAS
-{
-    model           kOmegaSST;
-    turbulence      on;
-    printCoeffs     on;
+RAS {
+  model kOmegaSST; // k-omega Shear Stress Transport model
+  turbulence on;   // Turbulence modeling enabled
+  printCoeffs on;  // Print model coefficients to output log
 }
 
 // ************************************************************************* //

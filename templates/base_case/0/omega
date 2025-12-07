@@ -13,7 +13,7 @@ FoamFile {
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-dimensions      [ 0 0 - 1 0 0 0 0];
+dimensions[0 0 - 1 0 0 0 0]; // Specific dissipation rate [1/s]
 
 internalField uniform 1;
 
@@ -42,7 +42,7 @@ boundaryField {
   side_right { type symmetryPlane; }
 
   hull {
-    type omegaWallFunction;
+    type omegaWallFunction; // Wall function for omega
     value uniform 1;
   }
 }

@@ -13,25 +13,25 @@ FoamFile {
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-dimensions      [ 1 - 1 - 2 0 0 0 0];
+dimensions[1 - 1 - 2 0 0 0 0]; // Dynamic Pressure [Pa] = [kg/(m*s^2)]
 
 internalField uniform 0;
 
 boundaryField {
   inlet {
-    type fixedFluxPressure;
+    type fixedFluxPressure; // Adjusts pressure gradient to match velocity flux
     value uniform 0;
   }
 
   outlet {
-    type fixedValue;
+    type fixedValue; // Fixed pressure boundary (usually 0 for atmospheric)
     value uniform 0;
   }
 
   bottom { type symmetryPlane; }
 
   top {
-    type totalPressure;
+    type totalPressure; // p = p0 - 0.5*rho*|U|^2. Stable for inflow/outflow.
     p0 uniform 0;
     U U;
     phi phi;
@@ -46,7 +46,7 @@ boundaryField {
   side_right { type symmetryPlane; }
 
   hull {
-    type fixedFluxPressure;
+    type fixedFluxPressure; // Standard for walls in buoyany-driven flows
     value uniform 0;
   }
 }

@@ -13,9 +13,9 @@ FoamFile {
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-dimensions      [ 0 2 - 2 0 0 0 0];
+dimensions[0 2 - 2 0 0 0 0]; // Turbulent kinetic energy [m^2/s^2]
 
-internalField uniform 0.01;
+internalField uniform 0.01; // Initial estimate (low turbulence)
 
 boundaryField {
   inlet {
@@ -42,7 +42,7 @@ boundaryField {
   side_right { type symmetryPlane; }
 
   hull {
-    type kqRWallFunction;
+    type kqRWallFunction; // standard wall function for k
     value uniform 0.01;
   }
 }

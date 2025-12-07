@@ -13,13 +13,13 @@ FoamFile {
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-dimensions      [ 0 2 - 1 0 0 0 0];
+dimensions[0 2 - 1 0 0 0 0]; // Turbulent viscosity [m^2/s]
 
-internalField uniform 0;
+internalField uniform 0; // Initialize to 0, will be calculated from k/omega
 
 boundaryField {
   inlet {
-    type calculated;
+    type calculated; // Derived from turbulence model
     value uniform 0;
   }
 
@@ -40,7 +40,7 @@ boundaryField {
   side_right { type symmetryPlane; }
 
   hull {
-    type nutkWallFunction;
+    type nutkWallFunction; // Wall function for vt based on k
     value uniform 0;
   }
 }

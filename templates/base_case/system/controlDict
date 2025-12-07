@@ -5,70 +5,68 @@
     \\  /    A nd           | Website:  www.openfoam.com
      \\/     M anipulation  |
 \*---------------------------------------------------------------------------*/
-FoamFile
-{
-    version     2.0;
-    format      ascii;
-    class       dictionary;
-    location    "system";
-    object      controlDict;
+FoamFile {
+  version 2.0;
+  format ascii;
+  class dictionary;
+  location "system";
+  object controlDict;
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-application     interFoam;
+application
+    interFoam; // Solver for 2 incompressible, isothermal immiscible fluids
 
-startFrom       startTime;
+startFrom startTime;
 
-startTime       0;
+startTime 0;
 
-stopAt          endTime;
+stopAt endTime;
 
-endTime         0.05;
+endTime 0.05; // Simulation duration in seconds
 
-deltaT          0.01;
+deltaT 0.01; // Initial time step size
 
-writeControl    timeStep;
+writeControl timeStep;
 
-writeInterval   1;
+writeInterval 1; // Write data every N time steps
 
-purgeWrite      0;
+purgeWrite 0; // 0 = Keep all time directories
 
-writeFormat     ascii;
+writeFormat ascii;
 
-writePrecision  6;
+writePrecision 6;
 
 writeCompression off;
 
-timeFormat      general;
+timeFormat general;
 
-timePrecision   6;
+timePrecision 6;
 
-runTimeModifiable true;
+runTimeModifiable true; // Allow modifying dictionaries while running
 
-adjustTimeStep  true;
+adjustTimeStep true; // Automatically adjust DeltaT based on Courant number
 
-maxCo           1.0;
-maxAlphaCo      1.0;
+maxCo 1.0;      // Maximum Courant number allowed
+maxAlphaCo 1.0; // Maximum Courant number for phase interface
 
-maxDeltaT       1;
+maxDeltaT 1; // Upper limit for DeltaT
 
-// Function objects
-functions
-{
-    forces
-    {
-        type            forces;
-        libs            ( "libforces.so" );
-        writeControl    timeStep;
-        writeInterval   1;
-        
-        patches         ( hull );
-        p               p_rgh;
-        U               U;
-        rho             rhoInf;
-        rhoInf          1025;
-        CofR            ( 50 0 5 );
-    }
+// Function objects for runtime post-processing
+functions {
+  forces {
+    type forces;
+    libs("libforces.so");
+    writeControl timeStep;
+    writeInterval 1;
+
+    patches(hull); // Patch to calculate forces on
+    p p_rgh;       // Pressure field name
+    U U;           // Velocity field name
+    rho rhoInf;    // Density field name
+    rhoInf 1025;   // Reference density (water)
+    CofR(50 0 5);  // Center of Rotation for moment calculations
+  }
 }
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

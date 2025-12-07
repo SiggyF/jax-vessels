@@ -5,106 +5,93 @@
     \\  /    A nd           | Website:  www.openfoam.com
      \\/     M anipulation  |
 \*---------------------------------------------------------------------------*/
-FoamFile
-{
-    version     2.0;
-    format      ascii;
-    class       dictionary;
-    object      snappyHexMeshDict;
+FoamFile {
+  version 2.0;
+  format ascii;
+  class dictionary;
+  object snappyHexMeshDict;
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-castellatedMesh true;
-snap            true;
-addLayers       false;
+castellatedMesh true; // Enable castellated mesh generation (step 1)
+snap true;            // Enable snapping to surface (step 2)
+addLayers false;      // Disable boundary layer addition (step 3)
 
 mergeTolerance 1e-6;
 
-geometry
-{
-    hull.stl
-    {
-        type triSurfaceMesh;
-        name hull;
-    }
+geometry {
+  hull.stl {
+    type triSurfaceMesh;
+    name hull;
+  }
 
-    refinementBox
-    {
-        type searchableBox;
-        min (-200 -50 -50);
-        max ( 400  50  50);
-    }
+  refinementBox {
+    type searchableBox; // Box defined by min and max coordinates
+    min(-200 - 50 - 50);
+    max(400 50 50);
+  }
 }
 
-castellatedMeshControls
-{
-    maxLocalCells 100000;
-    maxGlobalCells 2000000;
-    minRefinementCells 10;
-    maxLoadUnbalance 0.10;
-    nCellsBetweenLevels 3;
+castellatedMeshControls {
+  maxLocalCells 100000;   // Max cells per processor during refinement
+  maxGlobalCells 2000000; // Overall max cells
+  minRefinementCells 10;
+  maxLoadUnbalance 0.10;
+  nCellsBetweenLevels 3; // Buffer layers between different refinement levels
 
-    features
-    (
-        {
-            file "hull.eMesh";
-            level 3;
-        }
+  features {
+    {
+      file "hull.eMesh";
+      level 3; // Level to refine at the feature edges
+    }
     );
 
-    refinementSurfaces
-    {
-        hull
-        {
-            level (3 3);
-        }
+    refinementSurfaces {
+      hull {
+        level(3 3); // (min max) refinement levels on the surface
+      }
     }
 
-    resolveFeatureAngle 30;
+    resolveFeatureAngle 30; // Resolve sharp angles > 30 degrees
 
-    refinementRegions
-    {
-        refinementBox
-        {
-            mode inside;
-            levels ((1.0 2));
-        }
+    refinementRegions {
+      refinementBox {
+        mode inside;
+        levels((1.0 2)); // Refine to level 2 inside this box
+      }
     }
 
-    locationInMesh (150 50 -10);
+    locationInMesh(150 50 - 10); // Point inside the mesh (fluid domain) to keep
     allowFreeStandingZoneFaces true;
-}
+  }
 
-snapControls
-{
-    nSmoothPatch 3;
-    tolerance 2.0;
-    nSolveIter 30;
-    nRelaxIter 5;
-    nFeatureSnapIter 10;
+  snapControls {
+    nSmoothPatch 3; // Smoothing iterations before snapping
+    tolerance 2.0; // Snap point tolerance relative to cell size implies 2x cell
+                   // size
+    nSolveIter 30; // Mesh displacement solver iterations
+    nRelaxIter 5;  // Relaxation iterations
+    nFeatureSnapIter 10; // Iterations to snap to features
 
     implicitFeatureSnap false;
     explicitFeatureSnap true;
     multiRegionFeatureSnap false;
-}
+  }
 
-addLayersControls
-{
-    relativeSizes true;
-    layers
-    {
-        hull
-        {
-            nSurfaceLayers 3;
-        }
+  addLayersControls {
+    relativeSizes true; // Layer thickness relative to undistorted cell size
+    layers {
+      hull {
+        nSurfaceLayers 3; // Number of prism layers
+      }
     }
 
-    expansionRatio 1.1;
-    finalLayerThickness 0.3;
-    minThickness 0.1;
+    expansionRatio 1.1;      // Expansion ratio for layer thickness
+    finalLayerThickness 0.3; // Thickness of the final layer (relative)
+    minThickness 0.1;        // Minimum thickness to add layers
     nGrow 0;
 
-    featureAngle 60;
+    featureAngle 60; // Angle above which to stop adding layers
     slipFeatureAngle 30;
     nRelaxIter 3;
     nSmoothSurfaceNormals 1;
@@ -115,11 +102,11 @@ addLayersControls
     minMedianAxisAngle 90;
     nBufferCellsNoExtrude 0;
     nLayerIter 50;
-}
+  }
 
-meshQualityControls
-{
-    #include "meshQualityDict"
-}
+  meshQualityControls {
+#include "meshQualityDict"
+  }
 
-// ************************************************************************* //
+  // *************************************************************************
+  // //
