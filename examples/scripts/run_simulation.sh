@@ -59,40 +59,28 @@ mkdir -p "$OUT/constant/triSurface"
 cp "$HULL" "$OUT/constant/triSurface/hull.stl"
 echo "Copied hull.stl to relevant directory."
 
-# 3. Docker Command
-# Explicitly force entry to /data and use pipefail
-CMDS="set -o pipefail && \
-cd /data && \
-blockMesh | tee log.blockMesh && \
-surfaceFeatureExtract | tee log.surfaceFeatureExtract && \
-snappyHexMesh -overwrite | tee log.snappyHexMesh && \
-checkMesh | tee log.checkMesh"
-
-echo "Running Docker container for meshing..."
+# 3. Docker# Run commands in Docker
 docker run --rm \
     -v "$OUT":/data \
     "$IMAGE" \
-    /bin/bash -c "$CMDS"
+    bash -c "cd /data && \
+             blockMesh > log.blockMesh 2>&1 && \
+             surfaceFeatureExtract -dict system/surfaceFeatureExtractDict > log.surfaceFeatureExtract 2>&1 && \
+             snappyHexMesh -overwrite > log.snappyHexMesh 2>&1 && \
+             checkMesh > log.checkMesh 2>&1 && \
+             echo '-------------------------------------------------------' && \
+             echo 'Meshing Completed Successfully.' && \
+             echo 'Running interFoam...' && \
+             interFoam > log.interFoam 2>&1 && \
+             echo '-------------------------------------------------------' && \
+             echo 'Simulation (interFoam) Completed Successfully.' && \
+             echo 'Exporting to VTK...' && \
+             foamToVTK > log.foamToVTK 2>&1 && \
+             echo '-------------------------------------------------------' && \
+             echo 'Export (foamToVTK) Completed Successfully.' && \
+             echo 'Simulation workflow finished.'"
 
-echo "-------------------------------------------------------"
-if [ $? -eq 0 ]; then
-    echo "Meshing Completed Successfully."
-else
-    echo "Meshing Failed."
-    exit 1
-fi
-
-# 4. Run Solver
-echo "Running interFoam..."
-docker run --rm \
-    -v "$OUT:/data" \
-    "$IMAGE" \
-    interFoam -case /data >> "$OUT/log.interFoam" 2>&1
-
-echo "-------------------------------------------------------"
-if [ $? -eq 0 ]; then
-    echo "Simulation (interFoam) Completed Successfully."
-else
-    echo "Simulation (interFoam) Failed."
+if [ $? -ne 0 ]; then
+    echo "Simulation workflow failed."
     exit 1
 fi
