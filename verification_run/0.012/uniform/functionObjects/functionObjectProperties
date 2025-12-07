@@ -1,0 +1,53 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  2406                                  |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    arch        "LSB;label=32;scalar=64";
+    class       dictionary;
+    location    "0.012/uniform/functionObjects";
+    object      functionObjectProperties;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+cdf7e925f5746741c316f5fbcf39ad0dfca90775
+{
+    forces
+    {
+        vector
+        {
+            pressureForce   ( 1626270 -4739.33 686753 );
+            viscousForce    ( 138508 -6.10846 1668.54 );
+            internalForce   ( 0 0 0 );
+            pressureMoment  ( -245351 2044420000 -267183 );
+            viscousMoment   ( 219.295 820395 -405.198 );
+            internalMoment  ( 0 0 0 );
+        }
+    }
+    waveProbes
+    {
+        scalar
+        {
+            average(alpha.water) 1.000000000021311;
+            min(alpha.water) 1.000000000008891;
+            max(alpha.water) 1.000000000027521;
+            average(p_rgh)  60942.86031505844;
+            min(p_rgh)      56133.19378427462;
+            max(p_rgh)      70562.19337662608;
+        }
+        label
+        {
+            size(alpha.water) 3;
+            size(p_rgh)     3;
+        }
+    }
+}
+
+
+// ************************************************************************* //
