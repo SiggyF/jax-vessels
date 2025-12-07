@@ -1,0 +1,105 @@
+/*---------------------------------------------------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  2506                                  |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+Build  : _615aae61-20250627 OPENFOAM=2506 version=2506
+Arch   : "LSB;label=32;scalar=64"
+Exec   : blockMesh
+Date   : Dec 07 2025
+Time   : 15:10:13
+Host   : 4c52062ed0fb
+PID    : 221
+I/O    : uncollated
+Case   : /data
+nProcs : 1
+trapFpe: Floating point exception trapping enabled (FOAM_SIGFPE).
+fileModificationChecking : Monitoring run-time modified files using timeStampMaster (fileModificationSkew 5, maxFileModificationPolls 20)
+allowSystemOperations : Allowing user-supplied system call operations
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+Create time
+
+Creating block mesh from "system/blockMeshDict"
+--> FOAM Warning : 
+    From virtual Foam::Istream& Foam::ISstream::read(Foam::word&)
+    in file db/IOstreams/Sstreams/ISstream.C at line 899
+    Reading "system/blockMeshDict" at line 32
+    Missing 2 closing ')' while parsing
+
+vertices(($xmin
+
+--> FOAM Warning : 
+    From virtual Foam::Istream& Foam::ISstream::read(Foam::word&)
+    in file db/IOstreams/Sstreams/ISstream.C at line 899
+    Reading "system/blockMeshDict" at line 42
+    Missing 2 closing ')' while parsing
+
+blocks(hex(0
+
+--> FOAM Warning : 
+    From virtual Foam::Istream& Foam::ISstream::read(Foam::word&)
+    in file db/IOstreams/Sstreams/ISstream.C at line 899
+    Reading "system/blockMeshDict" at line 42
+    Missing 1 closing ')' while parsing
+
+simpleGrading(1
+
+--> FOAM Warning : 
+    From virtual Foam::Istream& Foam::ISstream::read(Foam::word&)
+    in file db/IOstreams/Sstreams/ISstream.C at line 899
+    Reading "system/blockMeshDict" at line 46
+    Missing 1 closing ')' while parsing
+
+boundary(
+
+--> FOAM Warning : 
+    From virtual Foam::Istream& Foam::ISstream::read(Foam::word&)
+    in file db/IOstreams/Sstreams/ISstream.C at line 899
+    Reading "system/blockMeshDict" at line 49
+    Missing 2 closing ')' while parsing
+
+faces((0
+
+--> FOAM Warning : 
+    From virtual Foam::Istream& Foam::ISstream::read(Foam::word&)
+    in file db/IOstreams/Sstreams/ISstream.C at line 899
+    Reading "system/blockMeshDict" at line 52
+    Missing 2 closing ')' while parsing
+
+faces((1
+
+--> FOAM Warning : 
+    From virtual Foam::Istream& Foam::ISstream::read(Foam::word&)
+    in file db/IOstreams/Sstreams/ISstream.C at line 899
+    Reading "system/blockMeshDict" at line 55
+    Missing 2 closing ')' while parsing
+
+faces((0
+
+--> FOAM Warning : 
+    From virtual Foam::Istream& Foam::ISstream::read(Foam::word&)
+    in file db/IOstreams/Sstreams/ISstream.C at line 899
+    Reading "system/blockMeshDict" at line 58
+    Missing 2 closing ')' while parsing
+
+faces((4
+
+--> FOAM Warning : 
+    From virtual Foam::Istream& Foam::ISstream::read(Foam::word&)
+    in file db/IOstreams/Sstreams/ISstream.C at line 899
+    Reading "system/blockMeshDict" at line 61
+    Missing 2 closing ')' while parsing
+
+faces((0
+
+--> FOAM Warning : 
+    From virtual Foam::Istream& Foam::ISstream::read(Foam::word&)
+    in file db/IOstreams/Sstreams/ISstream.C at line 899
+    Reading "system/blockMeshDict" at line 64
+    Missing 2 closing ')' while parsing
+
+faces((3
+
