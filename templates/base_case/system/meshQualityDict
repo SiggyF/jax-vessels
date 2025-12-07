@@ -37,6 +37,9 @@ minTetQuality - 1e+30;
 //  Generally > 0.01
 minVolumeRatio 0.01;
 
+//- Minimum face area. Generally > -1
+minArea - 1;
+
 //- Minimum face twist. Generally > 0.02
 minTwist 0.05;
 
@@ -57,6 +60,9 @@ minVolRatio 0.01;
 
 //- Minimum face flatness. generally > -1
 minFaceFlatness - 1;
+
+//- Number of smoothing iterations for scaling (added for v2506)
+nSmoothScale 4;
 
 //- Error reduction parameter (added for v2506)
 errorReduction 0.75;
