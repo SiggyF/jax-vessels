@@ -8,8 +8,7 @@ We build up the complexity of the simulation in three steps to validate the phys
 | Case Name | Description | Physics Verified | Key Features |
 | :--- | :--- | :--- | :--- |
 | **1. still_water** | Water and air at rest in a box. | Hydrostatic stability, Phase conservation. | `blockMesh` only, No ship, Flat surface. |
-| **2. inverse_barometer** | Standard pressure gradient applied to surface. | Pressure-Elevation coupling (Inverse Barometer). | `codedFixedValue` BC, Tilted surface. |
-| **3. wave_tank** | A wave propagating through the domain. | Momentum advection, Interface capturing (VOF). | Initialized wave/dam-break, simple mesh. |
+| **2. wave_tank** | A wave propagating through the domain. | Momentum advection, Interface capturing (VOF). | Initialized wave/dam-break, simple mesh. |
 | **3. base_case** | Ship hull in open water. | Fluid-Structure Interaction, Turbulence. | `snappyHexMesh`, Turbulence Model, `forces`. |
 
 ## Modelling Approach
@@ -41,13 +40,6 @@ graph TD
     end
     Hull[Hull Geometry: Center approx (0,0,0)] --> Domain
 ```
-
-### Frame of Reference
-The simulation utilizes a **body-fixed Eulerian reference frame**.
-*   **Stationary Ship**: The ship hull is fixed in space ($U_{ship} = 0$).
-*   **Moving Water**: The water flows past the hull with a defined velocity (e.g., $U_{inlet} = 10 m/s$).
-*   **Eulerian Grid**: The computational mesh is fixed (though `snappyHexMesh` adapts it to the geometry). movement is represented by the fluid flux through the static cells.
-This approach mimics a wind tunnel or circulating water channel test and avoids the complexity of dynamic mesh motion.
 
 ## Naming Scheme
 

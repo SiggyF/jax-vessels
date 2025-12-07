@@ -1,0 +1,31 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     |
+    \\  /    A nd           | Website:  www.openfoam.com
+     \\/     M anipulation  |
+\*---------------------------------------------------------------------------*/
+FoamFile {
+  version 2.0;
+  format ascii;
+  class dictionary;
+  location "system";
+  object setFieldsDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+defaultFieldValues(
+    volScalarFieldValue alpha.water 0 // Initialize whole domain as Air
+);
+
+regions(
+    boxToCell {
+      box(-100 - 150 - 100)(400 150 0); // Base water level z=0
+      fieldValues(volScalarFieldValue alpha.water 1);
+    } boxToCell {
+      box(-100 -
+          150 0)(-50 150 10); // Wave/Surge: Raised water to z=10 at inlet
+      fieldValues(volScalarFieldValue alpha.water 1);
+    });
+
+// ************************************************************************* //

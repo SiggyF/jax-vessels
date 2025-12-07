@@ -53,31 +53,18 @@ maxAlphaCo 1.0; // Maximum Courant number for phase interface
 maxDeltaT 1; // Upper limit for DeltaT
 
 // Function objects for runtime post-processing
+// Function objects for runtime post-processing
 functions {
-  forces {
-    type forces;
-    libs("libforces.so");
-    writeControl timeStep;
-    writeInterval 1;
-
-    patches(hull); // Patch to calculate forces on
-    p p_rgh;       // Pressure field name
-    U U;           // Velocity field name
-    rho rhoInf;    // Density field name
-    rhoInf 1025;   // Reference density (water)
-    CofR(50 0 5);  // Center of Rotation for moment calculations
-  }
-
-  // Wave probes alongside the hull to measure elevation
+  // Probes to track wave propagation along X-axis
   waveProbes {
     type probes;
     libs("libsampling.so");
     writeControl timeStep;
     writeInterval 1;
-    fields(alpha.water p_rgh);
-    probeLocations((0 20 0)   // Amidships, 20m off centerline
-                   (50 20 0)  // Bow region
-                   (-50 20 0) // Stern region
+    fields(alpha.water U);
+    probeLocations((-50 0 0.5) // Just downstream of wave generation
+                   (0 0 0.5)   // Middle of tank
+                   (50 0 0.5)  // Downstream
     );
   }
 }
