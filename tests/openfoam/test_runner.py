@@ -1,4 +1,5 @@
 import subprocess
+import logging
 from pathlib import Path
 
 def test_run_analysis_with_examples():
@@ -33,5 +34,6 @@ def test_run_analysis_with_examples():
     assert (case_dir / "constant" / "triSurface" / "hull.stl").exists()
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO)
     test_run_analysis_with_examples()
-    print("Test passed!")
+    logging.info("Test passed!")

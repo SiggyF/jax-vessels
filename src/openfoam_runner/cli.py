@@ -1,9 +1,14 @@
 import click
+import logging
 from pathlib import Path
 from dask.distributed import Client, LocalCluster
 from dask import delayed
 import dask
-from .tasks import setup_case_task, run_meshing_task, run_simulation_task, extract_parameters_task
+from .tasks import setup_case_task, run_meshing_task, run_simulation_task, run_post_processing_task, extract_parameters_task
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 @click.command()
 @click.argument("hull_stls", nargs=-1, type=click.Path(exists=True, path_type=Path))
@@ -26,7 +31,7 @@ def main(hull_stls, out_dir, parallel):
     
     tasks = []
     
-    click.echo(f"Processing {len(hull_stls)} hulls...")
+    logger.info(f"Processing {len(hull_stls)} hulls...")
     
     for i, hull_stl in enumerate(hull_stls):
         case_dir = out_dir / f"case_{hull_stl.stem}_{i}"
@@ -37,25 +42,25 @@ def main(hull_stls, out_dir, parallel):
             setup = delayed(setup_case_task)(hull_stl, case_dir)
             mesh = delayed(run_meshing_task)(setup)
             sim = delayed(run_simulation_task)(mesh)
-            params = delayed(extract_parameters_task)(sim)
+            post = delayed(run_post_processing_task)(sim)
+            params = delayed(extract_parameters_task)(post)
             tasks.append(params)
         else:
-            # Sequential execution, not optimized for this example but kept for logic
+            # Sequential execution
             setup_case_task(hull_stl, case_dir)
             run_meshing_task(case_dir)
             run_simulation_task(case_dir)
+            run_post_processing_task(case_dir)
             params = extract_parameters_task(case_dir)
-            click.echo(f"Result for {hull_stl.name}: {params}")
+            logger.info(f"Result for {hull_stl.name}: {params}")
 
     if parallel and tasks:
         # Compute all tasks
-        click.echo("Submitting tasks to Dask cluster...")
-        # from dask.diagnostics import ProgressBar
-        # with ProgressBar():
+        logger.info("Submitting tasks to Dask cluster...")
         results = dask.compute(*tasks)
 
         for i, res in enumerate(results):
-             click.echo(f"Result for {hull_stls[i].name}: {res}")
+             logger.info(f"Result for {hull_stls[i].name}: {res}")
 
 if __name__ == "__main__":
     main()
