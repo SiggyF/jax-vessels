@@ -30,7 +30,14 @@ if [ -z "$HULL" ] || [ -z "$OUT" ]; then
     usage
 fi
 
-# Convert paths to absolute
+# 1. Setup Run Directory
+if [ -d "$OUT" ]; then
+    echo "Output directory exists. Updating..."
+else
+    mkdir -p "$OUT"
+fi
+
+# Convert paths to absolute (now safe as directories exist)
 HULL=$(realpath "$HULL")
 OUT=$(realpath "$OUT")
 TEMPLATE=$(realpath "$TEMPLATE")
@@ -42,13 +49,6 @@ echo "Output:   $OUT"
 echo "Template: $TEMPLATE"
 echo "Image:    $IMAGE"
 echo "-------------------------------------------------------"
-
-# 1. Setup Run Directory
-if [ -d "$OUT" ]; then
-    echo "Output directory exists. Updating..."
-else
-    mkdir -p "$OUT"
-fi
 
 # Copy template content to output (using cp -R)
 # Trailing slash importance: we want contents of template in OUT
