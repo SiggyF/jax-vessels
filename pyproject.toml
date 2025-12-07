@@ -1,0 +1,20 @@
+[project]
+name = "ship-model-meta"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "jax-vessels",
+    "openfoam-runner",
+]
+
+[tool.uv.workspace]
+members = [
+    "jax_model",
+    "openfoam",
+]
+
+[tool.uv.sources]
+jax-vessels = { workspace = true }
+openfoam-runner = { workspace = true }

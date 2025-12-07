@@ -1,0 +1,14 @@
+[project]
+name = "jax-vessels"
+version = "0.1.0"
+description = "Jax-based linear ship model"
+dependencies = [
+    "jax",
+    "jaxlib",
+    "numpy",
+    "brax",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
