@@ -11,3 +11,8 @@ wheels/
 __pycache__/
 *.stl
 verification/
+
+# OpenFOAM
+simulations/
+*.log
+dynamicCode/
