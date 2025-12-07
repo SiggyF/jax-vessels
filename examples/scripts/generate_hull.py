@@ -388,18 +388,79 @@ def grid_to_mesh(grid):
          
     return verts, faces
 
+def generate_simple_box(L=100.0, B=20.0, D=10.0):
+    """
+    Generates a simple rectangular box (cuboid).
+    L: Length (X)
+    B: Beam (Y)
+    D: Depth (Z)
+    Origin at (0, -B/2, 0). Box extends to (L, B/2, D).
+    """
+    half_B = B / 2.0
+    
+    # 8 corners
+    # 0: 0, -B/2, 0 (Aft Port Bot)
+    # 1: 0, B/2, 0  (Aft Stbd Bot)
+    # 2: L, B/2, 0  (Fwd Stbd Bot)
+    # 3: L, -B/2, 0 (Fwd Port Bot)
+    # 4: 0, -B/2, D (Aft Port Top)
+    # 5: 0, B/2, D  (Aft Stbd Top)
+    # 6: L, B/2, D  (Fwd Stbd Top)
+    # 7: L, -B/2, D (Fwd Port Top)
+    
+    verts = [
+        [0.0, -half_B, 0.0],
+        [0.0,  half_B, 0.0],
+        [L,    half_B, 0.0],
+        [L,   -half_B, 0.0],
+        [0.0, -half_B, D],
+        [0.0,  half_B, D],
+        [L,    half_B, D],
+        [L,   -half_B, D]
+    ]
+    
+    faces = [
+        # Bottom (Normal -Z) -> 0-1-2-3 (CW from top? No CCW from bottom)
+        # 0,1,2; 0,2,3
+        [0, 1, 2], [0, 2, 3],
+        
+        # Top (Normal +Z) -> 4-5-6-7 (CCW from top)
+        # 4,5,6; 4,6,7
+        [4, 5, 6], [4, 6, 7],
+        
+        # Aft (Normal -X) -> 1-0-4-5 (CCW from back)
+        # 1,0,4; 1,4,5
+        [1, 0, 4], [1, 4, 5],
+        
+        # Fwd (Normal +X) -> 2-3-7-6 (CCW from front)
+        # 2,3,7; 2,7,6
+        [2, 3, 7], [2, 7, 6],
+        
+        # Port (Normal -Y) -> 0-3-7-4 (CCW from left)
+        # 0,3,7; 0,7,4
+        [0, 3, 7], [0, 7, 4],
+        
+        # Stbd (Normal +Y) -> 1-5-6-2 (CCW from right)
+        # 1,5,6; 1,6,2
+        [1, 5, 6], [1, 6, 2]
+    ]
+    
+    return verts, faces
+
 
 import click
 
 @click.command()
-@click.option("--type", type=click.Choice(["tanker", "barge"]), required=True, help="Type of hull to generate")
+@click.option("--type", type=click.Choice(["tanker", "barge", "box"]), required=True, help="Type of hull to generate")
 @click.option("--out", type=click.Path(path_type=Path), required=True, help="Output STL file path")
 def main(type, out):
     """Generate procedural ship hulls."""
     if type == "tanker":
         v, f = generate_kvlcc2_improved()
-    else:
+    elif type == "barge":
         v, f = generate_europe_iia_barge()
+    else: # type == "box"
+        v, f = generate_simple_box()
         
     # Ensure parent directory exists
     out.parent.mkdir(parents=True, exist_ok=True)

@@ -68,3 +68,10 @@ The `examples/hulls/` directory contains generated STL files ready for simulatio
 *   Standardized European inland waterway dimensions.
 *   Box-shaped midbody with parameterized bow and stern rakes.
 *   Suitable for shallow water resistance studies.
+
+### `simple_box.stl`
+**Type**: Simple Cuboid  
+**Dimensions**: 100m x 20m x 10m (Default)  
+**Features**:
+*   Pure rectangular geometry ("Shoebox"), ideal for initial verification of the OpenFOAM numerical setup without complex mesh features.
+*   Generated via `python examples/scripts/generate_hull.py --type box`.
