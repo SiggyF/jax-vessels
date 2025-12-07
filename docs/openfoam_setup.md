@@ -48,10 +48,10 @@ Contains the initial values and boundary conditions for all fields.
 -   **`fvSolution`**: Linear solvers. `GAMG` (Geometric Multi-Grid) for pressure, `smoothSolver` for velocity.
 
 ## Running a Case
-The typical workflow orchestrated by `run_simulation_docker.py` is:
+The typical workflow orchestrated by `examples/scripts/run_simulation.sh` is:
 1.  **Preparation**: Copy template to run dir, copy STL.
 2.  **`blockMesh`**: Create background grid.
-3.  **`surfaceFeatureExtract`**: Find hull edges.
+3.  **Docker Execution**: commands run inside `opencfd/openfoam-default` container.
 4.  **`snappyHexMesh -overwrite`**: Cut the hull out of the background grid.
 5.  **`checkMesh`**: Verify mesh quality.
 6.  **`topoSet` / `setFields`**: Initialize the water level (Not yet implemented in current template).
