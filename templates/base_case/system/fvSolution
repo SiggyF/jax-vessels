@@ -5,68 +5,87 @@
     \\  /    A nd           | Website:  www.openfoam.com
      \\/     M anipulation  |
 \*---------------------------------------------------------------------------*/
-FoamFile
-{
-    version     2.0;
-    format      ascii;
-    class       dictionary;
-    location    "system";
-    object      fvSolution;
+FoamFile {
+  version 2.0;
+  format ascii;
+  class dictionary;
+  location "system";
+  object fvSolution;
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-solvers
-{
-    "alpha.water.*"
-    {
-        nAlphaCorr      1;
-        nAlphaSubCycles 2;
-        cAlpha          1;
+solvers {
+  "alpha.water.*" {
+    nAlphaCorr 1;
+    nAlphaSubCycles 2;
+    cAlpha 1;
 
-        MULESCorr       yes;
-        nLimiterIter    3;
+    MULESCorr yes;
+    nLimiterIter 3;
 
-        solver          smoothSolver;
-        smoother        symGaussSeidel;
-        tolerance       1e-8;
-        relTol          0;
-    }
+    solver smoothSolver;
+    smoother symGaussSeidel;
+    tolerance 1e-8;
+    relTol 0;
+  }
 
-    "p_rgh.*"
-    {
-        solver          GAMG;
-        tolerance       1e-7;
-        relTol          0.01;
-        smoother        GaussSeidel;
-        cacheAgglomeration true;
-        nCellsInCoarsestLevel 10;
-        agglomerator    faceAreaPair;
-        mergeLevels     1;
-    }
+  "p_rgh.*" {
+    solver GAMG;
+    tolerance 1e-7;
+    relTol 0.01;
+    smoother GaussSeidel;
+    cacheAgglomeration true;
+    nCellsInCoarsestLevel 10;
+    agglomerator faceAreaPair;
+    mergeLevels 1;
+  }
 
-    "U.*"
-    {
-        solver          smoothSolver;
-        smoother        symGaussSeidel;
-        tolerance       1e-06;
-        relTol          0;
-    }
-    
-    "(k|omega).*"
-    {
-        solver          smoothSolver;
-        smoother        symGaussSeidel;
-        tolerance       1e-06;
-        relTol          0;
-    }
+  "U.*" {
+    solver smoothSolver;
+    smoother symGaussSeidel;
+    tolerance 1e-06;
+    relTol 0;
+  }
+
+  p_rghFinal {
+    $p_rgh;
+    tolerance 1e-06;
+    relTol 0;
+  }
+
+  pcorr {
+    $p_rgh;
+    tolerance 1e-05;
+    relTol 0;
+  }
+
+  pcorrFinal {
+    $p_rgh;
+    tolerance 1e-06;
+    relTol 0;
+  }
+
+  U {
+    solver smoothSolver;
+    smoother GaussSeidel;
+    tolerance 1e-05;
+    relTol 0.1;
+    nSweeps 1;
+  }
+
+  "(k|omega).*" {
+    solver smoothSolver;
+    smoother symGaussSeidel;
+    tolerance 1e-06;
+    relTol 0;
+  }
 }
 
-PIMPLE
-{
-    momentumPredictor no;
-    nOuterCorrectors 1;
-    nCorrectors     3;
-    nNonOrthogonalCorrectors 0;
+PIMPLE {
+  momentumPredictor no;
+  nOuterCorrectors 1;
+  nCorrectors 3;
+  nNonOrthogonalCorrectors 0;
 }
 
 // ************************************************************************* //
