@@ -1,19 +1,27 @@
 [project]
-name = "ship-model-meta"
+name = "ship-model"
 version = "0.1.0"
-description = "Add your description here"
+description = "Ship model visualization and simulation tools"
 readme = "README.md"
-requires-python = ">=3.13"
+requires-python = ">=3.10"
 dependencies = [
-    "jax-vessels",
-    "openfoam-runner",
+    "jax",
+    "jaxlib",
+    "numpy",
+    "brax",
+    "click",
+    "dask",
+    "distributed",
+    "tqdm",
 ]
 
-[tool.uv.workspace]
-members = [
-    "jax_model",
-    "openfoam",
-]
+[project.scripts]
+openfoam-run = "openfoam_runner.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
 
 [tool.uv.sources]
 jax-vessels = { workspace = true }
