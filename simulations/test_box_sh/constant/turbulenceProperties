@@ -5,41 +5,23 @@
     \\  /    A nd           | Website:  www.openfoam.com
      \\/     M anipulation  |
 \*---------------------------------------------------------------------------*/
-FoamFile {
-  version 2.0;
-  format ascii;
-  class volScalarField;
-  object alpha.water;
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "constant";
+    object      turbulenceProperties;
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-dimensions[0 0 0 0 0 0 0];
+simulationType  RAS;
 
-internalField uniform 0;
-
-boundaryField {
-  inlet {
-    type fixedValue;
-    value uniform 0; // Set by setFields
-  }
-
-  outlet {
-    type zeroGradient; // or inletOutlet
-  }
-
-  bottom { type symmetryPlane; }
-
-  top {
-    type inletOutlet;
-    inletValue uniform 0;
-    value uniform 0;
-  }
-
-  side_left { type symmetryPlane; }
-
-  side_right { type symmetryPlane; }
-
-  hull { type zeroGradient; }
+RAS
+{
+    model           kOmegaSST;
+    turbulence      on;
+    printCoeffs     on;
 }
 
 // ************************************************************************* //

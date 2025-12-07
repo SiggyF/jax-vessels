@@ -5,54 +5,44 @@
     \\  /    A nd           | Website:  www.openfoam.com
      \\/     M anipulation  |
 \*---------------------------------------------------------------------------*/
-FoamFile
-{
-    version     2.0;
-    format      ascii;
-    class       volScalarField;
-    object      nut;
+FoamFile {
+  version 2.0;
+  format ascii;
+  class volScalarField;
+  object nut;
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-dimensions      [0 2 -1 0 0 0 0];
+dimensions[0 2 - 1 0 0 0 0];
 
-internalField   uniform 0;
+internalField uniform 0;
 
-boundaryField
-{
-    inlet
-    {
-        type            calculated;
-        value           uniform 0;
-    }
+boundaryField {
+  inlet {
+    type calculated;
+    value uniform 0;
+  }
 
-    outlet
-    {
-        type            calculated;
-        value           uniform 0;
-    }
+  outlet {
+    type calculated;
+    value uniform 0;
+  }
 
-    bottom
-    {
-        type            symmetryPlane;
-    }
+  bottom { type symmetryPlane; }
 
-    top
-    {
-        type            calculated;
-        value           uniform 0;
-    }
+  top {
+    type calculated;
+    value uniform 0;
+  }
 
-    sides
-    {
-        type            symmetryPlane;
-    }
+  side_left { type symmetryPlane; }
 
-    hull
-    {
-        type            nutkWallFunction;
-        value           uniform 0;
-    }
+  side_right { type symmetryPlane; }
+
+  hull {
+    type nutkWallFunction;
+    value uniform 0;
+  }
 }
 
 // ************************************************************************* //

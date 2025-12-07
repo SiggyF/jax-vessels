@@ -5,54 +5,44 @@
     \\  /    A nd           | Website:  www.openfoam.com
      \\/     M anipulation  |
 \*---------------------------------------------------------------------------*/
-FoamFile
-{
-    version     2.0;
-    format      ascii;
-    class       volVectorField;
-    object      U;
+FoamFile {
+  version 2.0;
+  format ascii;
+  class volVectorField;
+  object U;
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-dimensions      [0 1 -1 0 0 0 0];
+dimensions[0 1 - 1 0 0 0 0];
 
-internalField   uniform (10 0 0); // Parametric speed? Set to 10 m/s for now
+internalField uniform(10 0 0); // Parametric speed? Set to 10 m/s for now
 
-boundaryField
-{
-    inlet
-    {
-        type            fixedValue;
-        value           uniform (10 0 0);
-    }
+boundaryField {
+  inlet {
+    type fixedValue;
+    value uniform(10 0 0);
+  }
 
-    outlet
-    {
-        type            inletOutlet;
-        inletValue      uniform (10 0 0);
-        value           uniform (10 0 0);
-    }
+  outlet {
+    type inletOutlet;
+    inletValue uniform(10 0 0);
+    value uniform(10 0 0);
+  }
 
-    bottom
-    {
-        type            symmetryPlane;
-    }
+  bottom { type symmetryPlane; }
 
-    top
-    {
-        type            pressureInletOutletVelocity;
-        value           uniform (0 0 0);
-    }
+  top {
+    type pressureInletOutletVelocity;
+    value uniform(0 0 0);
+  }
 
-    sides
-    {
-        type            symmetryPlane;
-    }
+  side_left { type symmetryPlane; }
 
-    hull
-    {
-        type            noSlip; // or movingWallVelocity if ref frame changes
-    }
+  side_right { type symmetryPlane; }
+
+  hull {
+    type noSlip; // or movingWallVelocity if ref frame changes
+  }
 }
 
 // ************************************************************************* //
