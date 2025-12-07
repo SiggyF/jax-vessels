@@ -19,18 +19,18 @@ addLayers false; // Turn off for initial test
 
 mergeTolerance 1e-6;
 
-geometry{hull.stl{type triSurfaceMesh;
-name hull;
-}
+geometry {
+  hull.stl {
+    type triSurfaceMesh;
+    name hull;
+  }
 
-// Refinement box for free surface
-refinementBox {
-  type searchableBox;
-  min(-200 - 100 - 5); // z approx water line
-  max(400 100 5);
+  refinementBox {
+    type searchableBox;
+    min(-200 - 50 - 50);
+    max(400 50 50);
+  }
 }
-}
-;
 
 castellatedMeshControls {
   maxLocalCells 100000;
@@ -45,10 +45,7 @@ castellatedMeshControls {
   });
 
   refinementSurfaces {
-    hull {
-      level(3 4); // Min Max refinement
-      patchInfo { type wall; }
-    }
+    hull { level(3 3); }
   }
 
   resolveFeatureAngle 30;
@@ -56,12 +53,11 @@ castellatedMeshControls {
   refinementRegions {
     refinementBox {
       mode inside;
-      levels((1.0 2)); // Level 2 refinement inside box
+      levels((1.0 2));
     }
   }
 
-  locationInMesh(150 50 10); // Point INSIDE the domain but OUTSIDE the hull.
-                             // Assuming hull is near origin.
+  locationInMesh(150 50 - 10); // Check this point is inside fluid
   allowFreeStandingZoneFaces true;
 }
 
@@ -71,6 +67,7 @@ snapControls {
   nSolveIter 30;
   nRelaxIter 5;
   nFeatureSnapIter 10;
+
   implicitFeatureSnap false;
   explicitFeatureSnap true;
   multiRegionFeatureSnap false;
@@ -81,10 +78,12 @@ addLayersControls {
   layers {
     hull { nSurfaceLayers 3; }
   }
-  expansionRatio 1.0;
+
+  expansionRatio 1.1;
   finalLayerThickness 0.3;
   minThickness 0.1;
   nGrow 0;
+
   featureAngle 60;
   slipFeatureAngle 30;
   nRelaxIter 3;
