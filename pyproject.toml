@@ -13,6 +13,7 @@ dependencies = [
     "dask",
     "distributed",
     "tqdm",
+    "mako",
 ]
 
 [project.scripts]
@@ -22,7 +23,7 @@ openfoam-run = "openfoam_runner.cli:main"
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
+[tool.hatch.build.targets.wheel]
+packages = ["src/jax_vessels", "src/openfoam_runner"]
 
-[tool.uv.sources]
-jax-vessels = { workspace = true }
-openfoam-runner = { workspace = true }
+

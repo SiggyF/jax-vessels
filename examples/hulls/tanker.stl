@@ -1,0 +1,86 @@
+solid tanker
+facet normal 0 0 0
+  outer loop
+    vertex -150.0 -30.0 -15.0
+    vertex 150.0 30.0 -15.0
+    vertex 150.0 -30.0 -15.0
+  endloop
+endfacet
+facet normal 0 0 0
+  outer loop
+    vertex -150.0 -30.0 -15.0
+    vertex -150.0 30.0 -15.0
+    vertex 150.0 30.0 -15.0
+  endloop
+endfacet
+facet normal 0 0 0
+  outer loop
+    vertex -150.0 -30.0 15.0
+    vertex 150.0 -30.0 15.0
+    vertex 150.0 30.0 15.0
+  endloop
+endfacet
+facet normal 0 0 0
+  outer loop
+    vertex -150.0 -30.0 15.0
+    vertex 150.0 30.0 15.0
+    vertex -150.0 30.0 15.0
+  endloop
+endfacet
+facet normal 0 0 0
+  outer loop
+    vertex 150.0 -30.0 -15.0
+    vertex 150.0 30.0 -15.0
+    vertex 150.0 30.0 15.0
+  endloop
+endfacet
+facet normal 0 0 0
+  outer loop
+    vertex 150.0 -30.0 -15.0
+    vertex 150.0 30.0 15.0
+    vertex 150.0 -30.0 15.0
+  endloop
+endfacet
+facet normal 0 0 0
+  outer loop
+    vertex -150.0 -30.0 -15.0
+    vertex -150.0 30.0 15.0
+    vertex -150.0 -30.0 15.0
+  endloop
+endfacet
+facet normal 0 0 0
+  outer loop
+    vertex -150.0 -30.0 -15.0
+    vertex -150.0 30.0 -15.0
+    vertex -150.0 30.0 15.0
+  endloop
+endfacet
+facet normal 0 0 0
+  outer loop
+    vertex 150.0 30.0 -15.0
+    vertex -150.0 30.0 -15.0
+    vertex -150.0 30.0 15.0
+  endloop
+endfacet
+facet normal 0 0 0
+  outer loop
+    vertex 150.0 30.0 -15.0
+    vertex -150.0 30.0 15.0
+    vertex 150.0 30.0 15.0
+  endloop
+endfacet
+facet normal 0 0 0
+  outer loop
+    vertex -150.0 -30.0 -15.0
+    vertex -150.0 -30.0 15.0
+    vertex 150.0 -30.0 15.0
+  endloop
+endfacet
+facet normal 0 0 0
+  outer loop
+    vertex -150.0 -30.0 -15.0
+    vertex 150.0 -30.0 15.0
+    vertex 150.0 -30.0 -15.0
+  endloop
+endfacet
+endsolid tanker
