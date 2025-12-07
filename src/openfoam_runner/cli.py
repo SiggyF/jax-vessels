@@ -4,7 +4,7 @@ from pathlib import Path
 from dask.distributed import Client, LocalCluster
 from dask import delayed
 import dask
-from .tasks import setup_case_task, run_meshing_task, run_simulation_task, run_post_processing_task, extract_parameters_task
+from .tasks import setup_case_task, run_meshing_task, run_set_fields_task, run_simulation_task, run_post_processing_task, extract_parameters_task
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -41,7 +41,8 @@ def main(hull_stls, out_dir, parallel):
             # Using simple delayed workflow
             setup = delayed(setup_case_task)(hull_stl, case_dir)
             mesh = delayed(run_meshing_task)(setup)
-            sim = delayed(run_simulation_task)(mesh)
+            fields = delayed(run_set_fields_task)(mesh)
+            sim = delayed(run_simulation_task)(fields)
             post = delayed(run_post_processing_task)(sim)
             params = delayed(extract_parameters_task)(post)
             tasks.append(params)
@@ -49,6 +50,7 @@ def main(hull_stls, out_dir, parallel):
             # Sequential execution
             setup_case_task(hull_stl, case_dir)
             run_meshing_task(case_dir)
+            run_set_fields_task(case_dir)
             run_simulation_task(case_dir)
             run_post_processing_task(case_dir)
             params = extract_parameters_task(case_dir)

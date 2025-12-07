@@ -1,0 +1,45 @@
+/*---------------------------------------------------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  2406                                  |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+Build  : _9bfe8264-20241212 OPENFOAM=2406 patch=241212 version=2406
+Arch   : "LSB;label=32;scalar=64"
+Exec   : interFoam
+Date   : Dec 07 2025
+Time   : 22:29:17
+Host   : 19b1787822f0
+PID    : 245
+I/O    : uncollated
+Case   : /app/verification_run
+nProcs : 1
+trapFpe: Floating point exception trapping enabled (FOAM_SIGFPE).
+fileModificationChecking : Monitoring run-time modified files using timeStampMaster (fileModificationSkew 5, maxFileModificationPolls 20)
+allowSystemOperations : Allowing user-supplied system call operations
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+Create time
+
+Create mesh for time = 0
+
+
+PIMPLE: Operating solver in PISO mode
+
+Reading field p_rgh
+
+Reading field U
+
+Reading/calculating face flux field phi
+
+Reading transportProperties
+
+--> FOAM Warning : 
+    From virtual Foam::Istream& Foam::ISstream::read(Foam::word&)
+    in file db/IOstreams/Sstreams/ISstream.C at line 899
+    Reading "constant/transportProperties" at line 17
+    Missing 1 closing ')' while parsing
+
+phases(water
+

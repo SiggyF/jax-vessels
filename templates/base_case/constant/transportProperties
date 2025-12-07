@@ -14,7 +14,7 @@ FoamFile {
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-phases(water air);
+phases (water air);
 
 water {
   transportModel Newtonian;

@@ -13,21 +13,21 @@ FoamFile {
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-dimensions[0 1 - 1 0 0 0 0]; // Velocity [m/s]
+dimensions      [ 0 1 -1 0 0 0 0 ]; // Velocity [m/s]
 
-internalField uniform(10 0 0); // Initial velocity field
+internalField uniform (10 0 0);
 
 boundaryField {
   inlet {
     type fixedValue; // Constant velocity at inlet
-    value uniform(10 0 0);
+    value uniform (10 0 0);
   }
 
   outlet {
     type inletOutlet; // Zero gradient for outflow, fixed value for inflow
                       // (backflow prev)
-    inletValue uniform(10 0 0);
-    value uniform(10 0 0);
+    inletValue uniform (10 0 0);
+    value uniform (10 0 0);
   }
 
   bottom { type symmetryPlane; }
@@ -35,7 +35,7 @@ boundaryField {
   top {
     type pressureInletOutletVelocity; // Velocity derived from flux, handles
                                       // open boundaries well
-    value uniform(0 0 0);
+    value uniform (0 0 0);
   }
 
   side_left { type symmetryPlane; }

@@ -1,0 +1,70 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     |
+    \\  /    A nd           | Website:  www.openfoam.com
+     \\/     M anipulation  |
+\*---------------------------------------------------------------------------*/
+FoamFile {
+  version 2.0;
+  format ascii;
+  class dictionary;
+  object meshQualityDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+//- Maximum non-orthogonality allowed. Generally < 65
+maxNonOrtho 65;
+
+//- Maximum boundary skewness allowed. Generally < 20
+maxBoundarySkewness 20;
+
+//- Maximum internal skewness allowed. Generally < 4
+maxInternalSkewness 4;
+
+//- Maximum concavity allowed. Generally < 80
+maxConcave 80;
+
+//- Minimum pyramid volume. Generally > 1e-13
+minVol 1e-13;
+
+//- Minimum quality of the tet formed by the face-centre
+//  and variable base point minimum decomposition triangles and
+//  the cell centre.  Generally > 1e-30
+minTetQuality - 1e+30;
+
+//- Minimum volume of the face pyramid volume / cell volume.
+//  Generally > 0.01
+minVolumeRatio 0.01;
+
+//- Minimum face area. Generally > -1
+minArea - 1;
+
+//- Minimum face twist. Generally > 0.02
+minTwist 0.05;
+
+//- Minimum triangle twist. Generally > -1
+minTriangleTwist - 1;
+
+//- Minimum flatness. Generally > 0.5
+minFlatness 0.5;
+
+//- Minimum face determinant. Generally > 0.001
+minDeterminant 0.001;
+
+//- Minimum face weight. Generally > 0.05
+minFaceWeight 0.05;
+
+//- Minimum normalized cell volume. generally > 0.01
+minVolRatio 0.01;
+
+//- Minimum face flatness. generally > -1
+minFaceFlatness - 1;
+
+//- Number of smoothing iterations for scaling (added for v2506)
+nSmoothScale 4;
+
+//- Error reduction parameter (added for v2506)
+errorReduction 0.75;
+
+// ************************************************************************* //
