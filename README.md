@@ -7,10 +7,12 @@ A high-performance optimization and simulation framework for ship hull geometrie
 This repository contains tools for:
 1.  **Procedural Hull Generation**: Creating parametric ship geometries (Tankers, Barges) using Python and Blender.
 2.  **CFD Integration**: Automated mesh generation and resistance simulation using OpenFOAM.
-3.  **Optimization**: Using JAX to learn and minimize resistance surrogates.
+3.  **Optimization**: Using JAX to learning and minimize resistance surrogates.
+
+## Documentation
+*   [OpenFOAM Case Setup](docs/openfoam_setup.md): Explanation of the simulation template.
 
 ## Installation
-
 This project uses `uv` for dependency management.
 
 ```bash
