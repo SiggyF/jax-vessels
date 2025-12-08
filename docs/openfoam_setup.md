@@ -1,6 +1,29 @@
 # OpenFOAM Base Case Documentation
 
-This document explains the configuration of the `templates/base_case` directory, which serves as the standard template for ship resistance simulations.
+> [!IMPORTANT]
+> **Docker Requirement**: All OpenFOAM simulations and utilities MUST be run inside the project's Docker container. OpenFOAM is NOT expected to be installed on the host machine.
+
+This document explains the configuration of the `templates/base_case` directory and the workflow for running simulations.
+
+## Workflow
+
+We provide a helper script `scripts/run_docker.sh` to facilitate running commands inside the container.
+
+### 1. Verification
+To run verification tests (e.g., `still_water`):
+```bash
+./scripts/run_docker.sh ./scripts/verify_case.sh still_water
+```
+
+### 2. Manual Commands
+To run arbitrary OpenFOAM commands:
+```bash
+./scripts/run_docker.sh blockMesh
+```
+or enter an interactive shell:
+```bash
+./scripts/run_docker.sh /bin/bash
+```
 
 ## Directory Structure
 
@@ -46,13 +69,3 @@ Contains the initial values and boundary conditions for all fields.
     -   `functions`: Includes a `forces` object to log Lift/Drag (resistance) on the `hull` patch at every time step.
 -   **`fvSchemes`**: Numerical schemes. Uses `vanLeer` for phase interface (`alpha`) to keep it sharp.
 -   **`fvSolution`**: Linear solvers. `GAMG` (Geometric Multi-Grid) for pressure, `smoothSolver` for velocity.
-
-## Running a Case
-The typical workflow orchestrated by `examples/scripts/run_simulation.sh` is:
-1.  **Preparation**: Copy template to run dir, copy STL.
-2.  **`blockMesh`**: Create background grid.
-3.  **Docker Execution**: commands run inside `opencfd/openfoam-default` container.
-4.  **`snappyHexMesh -overwrite`**: Cut the hull out of the background grid.
-5.  **`checkMesh`**: Verify mesh quality.
-6.  **`topoSet` / `setFields`**: Initialize the water level (Not yet implemented in current template).
-7.  **`interFoam`**: Run the simulation.

@@ -5,39 +5,53 @@
     \\  /    A nd           | Website:  www.openfoam.com
      \\/     M anipulation  |
 \*---------------------------------------------------------------------------*/
-FoamFile {
-  version 2.0;
-  format ascii;
-  class volScalarField;
-  object nut;
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volScalarField;
+    object      nut;
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-dimensions[0 2 - 1 0 0 0 0]; // Turbulent viscosity [m^2/s]
+dimensions      [0 2 -1 0 0 0 0];
 
-internalField uniform 0; // Initialize to 0, will be calculated from k/omega
+internalField   uniform 0;
 
-boundaryField {
-  inlet {
-    type calculated; // Derived from turbulence model
-    value uniform 0;
-  }
+boundaryField
+{
+    inlet
+    {
+        type            calculated;
+        value           uniform 0;
+    }
 
-  outlet {
-    type calculated;
-    value uniform 0;
-  }
+    outlet
+    {
+        type            calculated;
+        value           uniform 0;
+    }
 
-  bottom { type symmetryPlane; }
+    bottom
+    {
+        type            symmetryPlane;
+    }
 
-  top {
-    type calculated;
-    value uniform 0;
-  }
+    top
+    {
+        type            calculated;
+        value           uniform 0;
+    }
 
-  side_left { type symmetryPlane; }
+    side_left
+    {
+        type            symmetryPlane;
+    }
 
-  side_right { type symmetryPlane; }
+    side_right
+    {
+        type            symmetryPlane;
+    }
 }
 
 // ************************************************************************* //

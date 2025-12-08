@@ -5,43 +5,53 @@
     \\  /    A nd           | Website:  www.openfoam.com
      \\/     M anipulation  |
 \*---------------------------------------------------------------------------*/
-FoamFile {
-  version 2.0;
-  format ascii;
-  class volScalarField;
-  object alpha.water;
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volScalarField;
+    object      alpha.water;
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-dimensions[0 0 0 0 0 0 0]; // Dimensionless phase fraction [0-1]
+dimensions      [0 0 0 0 0 0 0];
 
-internalField uniform 0; // Initialize as Air (0)
+internalField   uniform 0;
 
-boundaryField {
-  inlet {
-    type fixedValue;
-    value uniform 0; // Typically set by setFields utility later
-  }
+boundaryField
+{
+    inlet
+    {
+        type            fixedValue;
+        value           uniform 0;
+    }
 
-  outlet {
-    type zeroGradient; // Allow phase to leave domain without reflection
-  }
+    outlet
+    {
+        type            zeroGradient;
+    }
 
-  bottom {
-    type symmetryPlane;
-  } // Symmetry: Zero normal gradient, zero flux (mirrors scalar field)
+    bottom
+    {
+        type            symmetryPlane;
+    }
 
-  top {
-    type inletOutlet;     // Air can enter/leave, water leaves only
-    inletValue uniform 0; // Pure air enters if backflow
-    value uniform 0;
-  }
+    top
+    {
+        type            inletOutlet;
+        inletValue      uniform 0;
+        value           uniform 0;
+    }
 
-  side_left { type symmetryPlane; } // Symmetry: Zero normal gradient, zero flux
+    side_left
+    {
+        type            symmetryPlane;
+    }
 
-  side_right {
-    type symmetryPlane;
-  } // Symmetry: Zero normal gradient, zero flux // No flux through wall (impermeable)
+    side_right
+    {
+        type            symmetryPlane;
+    }
 }
 
 // ************************************************************************* //

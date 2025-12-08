@@ -39,7 +39,7 @@ edges
 
 boundary
 (
-    minX
+    inlet
     {
         type patch;
         faces
@@ -47,7 +47,7 @@ boundary
             (0 4 7 3)
         );
     }
-    maxX
+    outlet
     {
         type patch;
         faces
@@ -55,15 +55,15 @@ boundary
             (1 2 6 5)
         );
     }
-    minZ
+    bottom
     {
-        type wall;
+        type symmetryPlane;
         faces
         (
             (0 3 2 1)
         );
     }
-    maxZ
+    top
     {
         type patch;
         faces
@@ -71,17 +71,17 @@ boundary
             (4 5 6 7)
         );
     }
-    minY
+    side_right
     {
-        type wall;
+        type symmetryPlane;
         faces
         (
             (0 1 5 4)
         );
     }
-    maxY
+    side_left
     {
-        type wall;
+        type symmetryPlane;
         faces
         (
             (3 7 6 2)

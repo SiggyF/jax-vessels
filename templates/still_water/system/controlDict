@@ -1,9 +1,9 @@
 /*--------------------------------*- C++ -*----------------------------------*\
-| =========                 |                                                 |
-| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
-|  \\    /   O peration     | Version:  v2406                                 |
-|   \\  /    A nd           | Website:  www.openfoam.com                      |
-|    \\/     M anipulation  |                                                 |
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     |
+    \\  /    A nd           | Website:  www.openfoam.com
+     \\/     M anipulation  |
 \*---------------------------------------------------------------------------*/
 FoamFile
 {
@@ -52,19 +52,18 @@ maxAlphaCo      1.0;
 
 maxDeltaT       1;
 
-// Function objects
 functions
 {
     velocityProbe
     {
         type            probes;
-        libs            ( "libsampling.so" );
+        libs            ("libsampling.so");
         writeControl    timeStep;
         writeInterval   1;
-        fields          ( U p_rgh alpha.water );
+        fields          (U p_rgh alpha.water);
         probeLocations
         (
-            ( 0 0 -5 )
+            (0 0 -5)
         );
     }
 }
