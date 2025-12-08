@@ -5,44 +5,68 @@
     \\  /    A nd           | Website:  www.openfoam.com
      \\/     M anipulation  |
 \*---------------------------------------------------------------------------*/
-FoamFile {
-  version 2.0;
-  format ascii;
-  class volScalarField;
-  object p_rgh;
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volScalarField;
+    object      p_rgh;
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-dimensions[1 - 1 - 2 0 0 0 0]; // Dynamic Pressure [Pa] = [kg/(m*s^2)]
+dimensions      [1 -1 -2 0 0 0 0];
 
-internalField uniform 0;
+internalField   uniform 0;
 
-boundaryField {
-  inlet {
-    type fixedFluxPressure; // Adjusts pressure gradient to match velocity flux
-    value uniform 0;
-  }
+boundaryField
+{
+    inlet
+    {
+        type            fixedFluxPressure;
+        value           uniform 0;
+    }
 
-  outlet {
-    type fixedValue; // Fixed pressure boundary (usually 0 for atmospheric)
-    value uniform 0;
-  }
+    outlet
+    {
+        type            fixedValue;
+        value           uniform 0;
+    }
 
-  bottom { type symmetryPlane; }
+    bottom
+    {
+        type            symmetryPlane;
+    }
 
-  top {
-    p0 uniform 0;
-    U U;
-    phi phi;
-    rho rho;
-    psi none;
-    gamma 1;
-    value uniform 0;
-  }
+    top
+    {
+        // Inverse Barometer Effect: Spatially varying pressure
+        // Gradient: 10 Pa/m along X
+        type            codedFixedValue;
+        name            inverseBarometerPressure;
+        value           uniform 0;
+        
+        code
+        #{
+            const fvPatch& boundaryPatch = patch();
+            const vectorField& Cf = boundaryPatch.Cf();
+            scalarField& field = *this;
 
-  side_left { type symmetryPlane; }
+            forAll(Cf, faceI)
+            {
+                field[faceI] = 10.0 * Cf[faceI].x();
+            }
+        #};
+    }
 
-  side_right { type symmetryPlane; }
+    side_left
+    {
+        type            symmetryPlane;
+    }
+
+    side_right
+    {
+        type            symmetryPlane;
+    }
 }
 
 // ************************************************************************* //

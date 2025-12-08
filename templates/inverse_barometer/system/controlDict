@@ -5,69 +5,67 @@
     \\  /    A nd           | Website:  www.openfoam.com
      \\/     M anipulation  |
 \*---------------------------------------------------------------------------*/
-FoamFile {
-  version 2.0;
-  format ascii;
-  class dictionary;
-  location "system";
-  object controlDict;
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "system";
+    object      controlDict;
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-application
-    interFoam; // Solver for 2 incompressible, isothermal immiscible fluids
+application     interFoam;
 
-startFrom startTime;
+startFrom       startTime;
 
-startTime 0;
+startTime       0;
 
-stopAt endTime;
+stopAt          endTime;
 
-endTime 0.05; // Simulation duration in seconds
+endTime         0.05;
 
-deltaT 0.01; // Initial time step size
+deltaT          0.01;
 
-writeControl timeStep;
+writeControl    timeStep;
 
-writeInterval 1; // Write data every N time steps
+writeInterval   1;
 
-purgeWrite 0; // 0 = Keep all time directories
+purgeWrite      0;
 
-writeFormat ascii;
+writeFormat     ascii;
 
-writePrecision 6;
+writePrecision  6;
 
 writeCompression off;
 
-timeFormat general;
+timeFormat      general;
 
-timePrecision 6;
+timePrecision   6;
 
-runTimeModifiable true; // Allow modifying dictionaries while running
+runTimeModifiable true;
 
-adjustTimeStep true; // Automatically adjust DeltaT based on Courant number
+adjustTimeStep  true;
 
-maxCo 1.0;      // Maximum Courant number allowed
-maxAlphaCo 1.0; // Maximum Courant number for phase interface
+maxCo           1.0;
+maxAlphaCo      1.0;
 
-maxDeltaT 1; // Upper limit for DeltaT
+maxDeltaT       1;
 
-// Function objects for runtime post-processing
-// Function objects for runtime post-processing
-functions {
-  // Probe to verify water is still
-  velocityProbe
-  {
-    type            probes;
-    libs            ( "libsampling.so" );
-    writeControl    timeStep;
-    writeInterval   1;
-    fields          ( U p_rgh alpha.water );
-    probeLocations
-    (
-        ( 0 0 -5 )
-    );
-  }
+functions
+{
+    velocityProbe
+    {
+        type            probes;
+        libs            ("libsampling.so");
+        writeControl    timeStep;
+        writeInterval   1;
+        fields          (U p_rgh alpha.water);
+        probeLocations
+        (
+            (200 0 -5)
+        );
+    }
 }
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+// ************************************************************************* //
