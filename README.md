@@ -94,6 +94,21 @@ python examples/scripts/generate_hull.py --type tanker --out examples/hulls/tank
 python examples/scripts/generate_hull.py --type barge --out examples/hulls/barge_inland.stl
 ```
 
+## Hydrostatics Analysis
+
+We provide a tool to quickly check the hydrostatic properties (displacement, center of buoyancy, etc.) of any STL hull geometry using `meshmagick`.
+
+```bash
+# Check hydrostatics for a hull
+./scripts/check_hydrostatics.sh <path_to_stl> [water_density] [vertical_cog]
+```
+
+Example:
+```bash
+./scripts/check_hydrostatics.sh templates/kcs_hull/constant/triSurface/hull.stl 1025 0
+```
+
+
 ## Running with Docker
 We recommend using Docker to ensure a consistent OpenFOAM environment with all dependencies.
 
