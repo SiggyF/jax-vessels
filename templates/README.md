@@ -21,6 +21,10 @@ These templates are not meant to be run directly in place. They should be copied
 
 The project includes a helper script to copy and run a specific case inside the Docker container:
 
+    setFields  # Initializes water/air phases (not needed for kcs_hull if using stl typically, but check specific case)
+    # If starting kcs_hull with ship:
+    # surfaceFeatureExtract
+    # snappyHexMesh -overwrite
 ```bash
 # General syntax
 ./scripts/run_docker.sh ./scripts/verify_case.sh <case_name>
