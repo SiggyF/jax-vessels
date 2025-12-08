@@ -27,15 +27,7 @@ echo "Copying template files from $TEMPLATE_DIR to $RUN_DIR..."
 cp -r $TEMPLATE_DIR/* $RUN_DIR/
 
 # Special handling for base_case (needs STL)
-if [ "$CASE_NAME" == "base_case" ]; then
-    mkdir -p $RUN_DIR/constant/triSurface
-    if [ -f examples/hulls/simple_box.stl ]; then
-        cp examples/hulls/simple_box.stl $RUN_DIR/constant/triSurface/hull.stl
-    else
-        echo "Error: examples/hulls/simple_box.stl not found"
-        exit 1
-    fi
-fi
+# STL logic handled within templates now
 
 cd $RUN_DIR
 
@@ -44,9 +36,12 @@ blockMesh | grep -E "Error|Fatal" || true
 checkMesh | tail -n 5
 
 # Case specific steps
-if [ "$CASE_NAME" == "base_case" ]; then
-    echo "=== Running surfaceFeatureExtract ==="
-    surfaceFeatureExtract | grep -E "Error|Fatal" || true
+# SnappyHexMesh logic
+if [ -f "system/snappyHexMeshDict" ]; then
+    if [ -f "system/surfaceFeatureExtractDict" ]; then
+        echo "=== Running surfaceFeatureExtract ==="
+        surfaceFeatureExtract | grep -E "Error|Fatal" || true
+    fi
     
     echo "=== Running snappyHexMesh ==="
     snappyHexMesh -overwrite > log.snappyHexMesh
@@ -54,10 +49,11 @@ if [ "$CASE_NAME" == "base_case" ]; then
     checkMesh | tail -n 5
 fi
 
-# setFields (if applicable, e.g. for wave_tank or base_case)
+# setFields (if applicable)
 if [ -f "system/setFieldsDict" ]; then
     echo "=== Running setFields ==="
-    setFields
+    setFields > log.setFields
+    grep -E "Error|Fatal" log.setFields || true
 fi
 
 echo "=== Running interFoam ==="

@@ -3,7 +3,7 @@
 > [!IMPORTANT]
 > **Docker Requirement**: All OpenFOAM simulations and utilities MUST be run inside the project's Docker container. OpenFOAM is NOT expected to be installed on the host machine.
 
-This document explains the configuration of the `templates/base_case` directory and the workflow for running simulations.
+This document explains the configuration of the `templates/kcs_hull` directory and the workflow for running simulations.
 
 ## Workflow
 
