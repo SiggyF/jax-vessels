@@ -1,9 +1,9 @@
 /*--------------------------------*- C++ -*----------------------------------*\
-| =========                 |                                                 |
-| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
-|  \\    /   O peration     | Version:  v2406                                 |
-|   \\  /    A nd           | Website:  www.openfoam.com                      |
-|    \\/     M anipulation  |                                                 |
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     |
+    \\  /    A nd           | Website:  www.openfoam.com
+     \\/     M anipulation  |
 \*---------------------------------------------------------------------------*/
 FoamFile
 {
@@ -22,19 +22,20 @@ defaultFieldValues
 
 regions
 (
+    // Base water level
     boxToCell
     {
-        box ( -100 -150 -100 ) ( 400 150 0 ); // Base water level z=0
+        box (-100 -150 -100) (400 150 0);
         fieldValues
         (
             volScalarFieldValue alpha.water 1
         );
     }
 
-    // Add a raised block of water at inlet for a dam-break style wave
+    // Dam break / Wave initiation block at inlet
     boxToCell
     {
-        box ( -100 -150 0 ) ( -80 150 5 );    // High water at inlet
+        box (-100 -150 0) (-80 150 10);
         fieldValues
         (
             volScalarFieldValue alpha.water 1

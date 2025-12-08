@@ -1,9 +1,9 @@
 /*--------------------------------*- C++ -*----------------------------------*\
-| =========                 |                                                 |
-| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
-|  \\    /   O peration     | Version:  v2406                                 |
-|   \\  /    A nd           | Website:  www.openfoam.com                      |
-|    \\/     M anipulation  |                                                 |
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     |
+    \\  /    A nd           | Website:  www.openfoam.com
+     \\/     M anipulation  |
 \*---------------------------------------------------------------------------*/
 FoamFile
 {
@@ -14,18 +14,18 @@ FoamFile
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-scale   0.1;
+scale   1; // Using scale 1 to avoid confusion with 0.1
 
 vertices
 (
-    (-100 -150 -100) // 0
-    ( 400 -150 -100) // 1
-    ( 400  150 -100) // 2
-    (-100  150 -100) // 3
-    (-100 -150  100) // 4
-    ( 400 -150  100) // 5
-    ( 400  150  100) // 6
-    (-100  150  100) // 7
+    (-100 -150 -100)
+    ( 400 -150 -100)
+    ( 400  150 -100)
+    (-100  150 -100)
+    (-100 -150  100)
+    ( 400 -150  100)
+    ( 400  150  100)
+    (-100  150  100)
 );
 
 blocks
@@ -39,7 +39,7 @@ edges
 
 boundary
 (
-    minX
+    inlet
     {
         type patch;
         faces
@@ -47,7 +47,7 @@ boundary
             (0 4 7 3)
         );
     }
-    maxX
+    outlet
     {
         type patch;
         faces
@@ -55,15 +55,15 @@ boundary
             (1 2 6 5)
         );
     }
-    minZ
+    bottom
     {
-        type wall;
+        type symmetryPlane;
         faces
         (
             (0 3 2 1)
         );
     }
-    maxZ
+    top
     {
         type patch;
         faces
@@ -71,17 +71,17 @@ boundary
             (4 5 6 7)
         );
     }
-    minY
+    side_right
     {
-        type wall;
+        type symmetryPlane;
         faces
         (
             (0 1 5 4)
         );
     }
-    maxY
+    side_left
     {
-        type wall;
+        type symmetryPlane;
         faces
         (
             (3 7 6 2)

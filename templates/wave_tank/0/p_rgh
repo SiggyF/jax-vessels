@@ -5,45 +5,59 @@
     \\  /    A nd           | Website:  www.openfoam.com
      \\/     M anipulation  |
 \*---------------------------------------------------------------------------*/
-FoamFile {
-  version 2.0;
-  format ascii;
-  class volScalarField;
-  object p_rgh;
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volScalarField;
+    object      p_rgh;
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-dimensions[1 - 1 - 2 0 0 0 0]; // Dynamic Pressure [Pa] = [kg/(m*s^2)]
+dimensions      [1 -1 -2 0 0 0 0];
 
-internalField uniform 0;
+internalField   uniform 0;
 
-boundaryField {
-  inlet {
-    type fixedFluxPressure; // Adjusts pressure gradient to match velocity flux
-    value uniform 0;
-  }
+boundaryField
+{
+    inlet
+    {
+        type            fixedFluxPressure;
+        value           uniform 0;
+    }
 
-  outlet {
-    type fixedValue; // Fixed pressure boundary (usually 0 for atmospheric)
-    value uniform 0;
-  }
+    outlet
+    {
+        type            fixedValue;
+        value           uniform 0;
+    }
 
-  bottom { type symmetryPlane; }
+    bottom
+    {
+        type            symmetryPlane;
+    }
 
-  top {
-    type totalPressure; // p = p0 - 0.5*rho*|U|^2. Stable for inflow/outflow.
-    p0 uniform 0;
-    U U;
-    phi phi;
-    rho rho;
-    psi none;
-    gamma 1;
-    value uniform 0;
-  }
+    top
+    {
+        type            totalPressure;
+        p0              uniform 0;
+        U               U;
+        phi             phi;
+        rho             rho;
+        psi             none;
+        gamma           1;
+        value           uniform 0;
+    }
 
-  side_left { type symmetryPlane; }
+    side_left
+    {
+        type            symmetryPlane;
+    }
 
-  side_right { type symmetryPlane; }
+    side_right
+    {
+        type            symmetryPlane;
+    }
 }
 
 // ************************************************************************* //
