@@ -57,7 +57,15 @@ if [ -f "system/setFieldsDict" ]; then
 fi
 
 echo "=== Running interFoam ==="
-interFoam > log.interFoam
+if [ -f "system/decomposeParDict" ]; then
+    echo "Running in PARALLEL (6 cores)..."
+    decomposePar > log.decomposePar
+    mpirun -np 6 interFoam -parallel > log.interFoam
+    reconstructPar > log.reconstructPar
+else
+    echo "Running in SERIAL..."
+    interFoam > log.interFoam
+fi
 tail -n 10 log.interFoam
 
 echo "VERIFICATION FOR $CASE_NAME PASSED"

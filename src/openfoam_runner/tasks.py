@@ -18,11 +18,11 @@ def setup_case_task(hull_stl: Path, case_dir: Path):
     
     # Locate templates relative to project root or package
     # Assuming /app structure or current working directory has templates
-    template_src = Path("templates/base_case").resolve()
+    template_src = Path("templates/kcs_hull").resolve()
     
     if not template_src.exists():
          # Fallback try relative to file
-         template_src = Path(__file__).parent.parent.parent / "templates" / "base_case"
+         template_src = Path(__file__).parent.parent.parent / "templates" / "kcs_hull"
          
     if not template_src.exists():
         raise FileNotFoundError(f"Template directory not found at {template_src}")
