@@ -221,10 +221,61 @@ def create_hull_shaper_node_group():
     # Map X to Width Factor
     plan_curve = tree.nodes.new('ShaderNodeFloatCurve')
     plan_curve.location = (-500, 200)
-    # Default curve is 0..1 linear. We want 1 mostly, tapering at ends.
-    # Let's set some default handle positions for a barge? 
-    # Boxy: 0.0->0.5, 0.1->1.0, 0.9->1.0, 1.0->0.5 ?
-    # We can programmatically set points if needed, or just leave linear for user to edit.
+    
+    # Configure Curve Points for Barge Shape
+    # Default is 2 points: (0,0) and (1,1). We want Box shape.
+    # Points:
+    # 0.0 -> 0.6 (Stern Transom Width)
+    # 0.1 -> 1.0 (Parallel Midbody Start)
+    # 0.9 -> 1.0 (Parallel Midbody End)
+    # 1.0 -> 0.4 (Bow Width)
+    
+    curve = plan_curve.mapping.curves[0]
+    
+    # Reuse existing points to avoid removal errors
+    # Default usually has 2 points
+    
+    # Define our target data
+    # (Location X, Location Y, Handle Type)
+    targets = [
+        ((0.0, 0.6), 'VECTOR'),  # 0. Stern Transom
+        ((0.05, 0.9), 'AUTO'),   # 1. Stern Taper
+        ((0.1, 1.0), 'AUTO'),    # 2. Parallel Start
+        ((0.9, 1.0), 'AUTO'),    # 3. Parallel End
+        ((0.95, 0.8), 'AUTO'),   # 4. Bow Taper
+        ((1.0, 0.2), 'VECTOR')   # 5. Bow Tip
+    ]
+    
+    # Ensure we have enough points
+    while len(curve.points) < len(targets):
+        curve.points.new(0.5, 0.5)
+        
+    # If too many (unlikely for default), remove or ignore. 
+    # Default is 2. We need 6. So we just add 4.
+    
+    # Apply data
+    for i, (loc, h_type) in enumerate(targets):
+        p = curve.points[i]
+        p.location = loc
+        p.handle_type = h_type
+        
+    # Refresh curve
+    plan_curve.mapping.update()
+    
+    # 3. Parallel Midbody End (0.9 -> 1.0)
+    p3 = curve.points.new(0.9, 1.0)
+    p3.handle_type = 'AUTO'
+    
+    # 4. Bow Taper Start (0.95 -> 0.8)
+    p4 = curve.points.new(0.95, 0.8)
+    p4.handle_type = 'AUTO'
+    
+    # 5. Bow Tip (1.0 -> 0.2) - Use VECTOR for sharp finish
+    p5 = curve.points.new(1.0, 0.2)
+    p5.handle_type = 'VECTOR'
+    
+    # Refresh curve
+    plan_curve.mapping.update()
     
     links = tree.links
     links.new(read_norm.outputs[0], plan_curve.inputs['Value'])
