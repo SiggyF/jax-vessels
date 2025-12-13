@@ -115,13 +115,29 @@ def verify_nurbs_barge():
              logger.info("PASS: Stern rake has curvature.")
     
     # 5. Cleanup
+    # Only clean up if PASSED. If failed, we likely exited earlier (sys.exit).
+    # But sys.exit raises usually.
+    # Let's wrap main logic in try/except block in the caller or handle it here?
+    # This function IS the main logic.
+    # If we reached here, we PASSED.
+    
     try:
-        os.remove("barge_nurbs.blend")
-        logger.info("Cleanup: 'barge_nurbs.blend' removed.")
-    except OSError:
-        pass
+        if os.path.exists("barge_nurbs.blend"):
+            os.remove("barge_nurbs.blend")
+            logger.info("Cleanup: 'barge_nurbs.blend' removed (PASS).")
+    except Exception as e:
+        logger.warning(f"Cleanup failed: {e}")
         
     logger.info("ALL PASSED")
 
 if __name__ == "__main__":
-    verify_nurbs_barge()
+    try:
+        verify_nurbs_barge()
+    except SystemExit as e:
+        if e.code != 0:
+            print("VERIFICATION FAILED. Keeping 'barge_nurbs.blend' for inspection.")
+        raise
+    except Exception as e:
+        print(f"ERROR: {e}")
+        print("VERIFICATION CRASHED. Keeping 'barge_nurbs.blend' for inspection.")
+        sys.exit(1)

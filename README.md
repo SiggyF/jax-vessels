@@ -126,6 +126,9 @@ We provide two methods for generating hull geometries:
 ### 1. Blender Geometry Nodes (Recommended)
 Produces high-quality, organic, and simulation-ready meshes using Blender's procedural node system.
 
+> [!NOTE]
+> Requires **Blender 4.0** or later (for STL export support).
+
 ```bash
 # Generate KVLCC2 Tanker (320m) with Bulbous Bow
 blender -b -P examples/scripts/blender_ship_geonodes.py

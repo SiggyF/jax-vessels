@@ -18,12 +18,30 @@ def clean_scene():
     for block in bpy.data.curves:
         if block.users == 0: bpy.data.curves.remove(block)
 
-def create_nurbs_barge():
+from dataclasses import dataclass
+
+@dataclass
+class BargeConfig:
+    length: float = 135.0
+    beam: float = 14.2
+    depth: float = 4.0
+    bilge_radius: float = 1.2
+    parallel_midbody_start: float = 20.0
+    parallel_midbody_end: float = 115.0
+    bow_rake_len: float = 20.0
+    stern_rake_len: float = 25.0
+    stern_tunnel_height: float = 1.8
+
+def create_nurbs_barge(config: BargeConfig = BargeConfig()):
+    """
+    Creates a procedural inland barge hull using NURBS surfaces.
+    Scale: Meters.
+    """
     # Parameters
-    L = 135.0
-    B = 14.2
-    H = 4.0
-    R = 0.8 
+    L = config.length
+    B = config.beam
+    H = config.depth
+    R = config.bilge_radius 
     HalfB = B / 2.0
     
     # Target Grid Size: 9 U stations x 5 V points
@@ -100,20 +118,20 @@ def create_nurbs_barge():
         # 1. Calculate Envelope (Width, Height, KeelZ)
         width_fac = 1.0
         # Tapers
-        if x < 20.0: # Stern
-             t = x / 20.0
+        if x < config.parallel_midbody_start: # Stern
+             t = x / config.parallel_midbody_start
              width_fac = 0.6 + 0.4 * (t**0.5)
-        elif x > 115.0: # Bow
-             t = (x - 115.0) / 20.0
+        elif x > config.parallel_midbody_end: # Bow
+             t = (x - config.parallel_midbody_end) / config.bow_rake_len
              width_fac = 1.0 - 0.9 * (t**1.5)
              
         curr_half_b = HalfB * width_fac
         
         keel_z = 0.0
         # Stern Tunnel / Rake
-        if x < 25.0:
-            t = (25.0 - x) / 25.0
-            keel_z = 1.8 * (t**2) # Tunnel height 1.8m
+        if x < config.stern_rake_len:
+            t = (config.stern_rake_len - x) / config.stern_rake_len
+            keel_z = config.stern_tunnel_height * (t**2) 
             
         deck_z = H
         if x < 10.0: deck_z += 0.5 * ((10-x)/10)**2
