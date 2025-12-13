@@ -239,6 +239,20 @@ The `examples/hulls/` directory contains generated STL files ready for simulatio
 *   Pure rectangular geometry ("Shoebox"), ideal for initial verification of the OpenFOAM numerical setup without complex mesh features.
 *   Generated via `python examples/scripts/generate_hull.py --type box`.
 
+## Floating Hull Simulation
+To simulate a floating vessel (6DoF) in Head Seas (waves hitting the bow), ensuring correct hull orientation is critical. The `blender_nurbs_barge.py` script generates the hull with the Bow at positive X. Since the flow direction is also positive X, this results in "Following Seas" by default.
+
+To correct this for "Head Seas" (Bow upstream):
+```bash
+bash scripts/run_docker.sh surfaceTransformPoints \
+    -yaw 180 \
+    -translate '(135 0 0)' \
+    examples/vessels/barge_nurbs.stl \
+    templates/floating_hull/constant/triSurface/hull.stl
+```
+This rotates the hull 180° around the vertical axis and translates it back to the domain origin. with configurable stations and profiles.
+*   Features a tapered bow and raked stern.
+
 ### `barge_geonodes.stl`
 **Type**: Parametric Inland Barge (Procedural)  
 **Dimensions**: 135m x 14.2m x 4m (Class Va)  

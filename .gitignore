@@ -178,3 +178,4 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+badFaces

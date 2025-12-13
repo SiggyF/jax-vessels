@@ -24,6 +24,9 @@ RUN curl -s https://dl.openfoam.com/add-debian-repo.sh | bash
 # Install OpenFOAM (v2406)
 RUN apt-get update && apt-get install -y openfoam2406-default && rm -rf /var/lib/apt/lists/*
 
+# Source OpenFOAM environment for all interactive shells
+RUN echo "source /usr/lib/openfoam/openfoam2406/etc/bashrc" >> /etc/bash.bashrc
+
 # Install uv (system-wide)
 ENV UV_INSTALL_DIR="/usr/local/bin"
 RUN curl -LsSf https://astral.sh/uv/install.sh | sh
