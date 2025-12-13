@@ -24,6 +24,32 @@ boundaryField
     hull
     {
         type            sixDoFRigidBodyDisplacement;
+        centreOfMass    (67.5 0 2);
+        mass            2000000;
+        momentOfInertia (5000000 50000000 50000000);
+        rho             rhoInf;
+        rhoInf          1025;
+        report          on;
+        
+        solver
+        {
+            type Newmark;
+        }
+
+        constraints
+        {
+           XZPlane
+           {
+               sixDoFRigidBodyMotionConstraint plane;
+               normal (0 1 0); 
+               anchor (67.5 0 2);
+           }
+           rotationAxis
+           {
+               sixDoFRigidBodyMotionConstraint axis;
+               axis (0 1 0); 
+           }
+        }
         value           uniform (0 0 0);
     }
 

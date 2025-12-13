@@ -17,84 +17,75 @@ import re
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-def parse_state_file(filepath: Path):
-    """
-    Parses OpenFOAM sixDoFRigidBodyMotionState dictionary.
-    Format:
-    centreOfRotation ( 67.5 0 2 );
-    orientation ( 1 0 0 ... );
-    """
-    try:
-        content = filepath.read_text()
+def update(frame):
+    # Scan all processor directories
+    # processor*/0.05/uniform/sixDoFRigidBodyMotionState
+    # sort by time
+    
+    times = []
+    heaves = []
+    pitches = []
+    
+    # Iterate over all processor* directories
+    for proc_dir in CASE_DIR.glob("processor*"):
+        # Look for time directories inside
+        for time_dir in proc_dir.iterdir():
+            if not time_dir.is_dir(): continue
+            try:
+                t = float(time_dir.name)
+            except ValueError:
+                continue
+                
+            state_file = time_dir / "uniform/sixDoFRigidBodyMotionState"
+            if state_file.exists():
+                z_val = parse_state_file(state_file)
+                if z_val is not None:
+                    times.append(t)
+                    heaves.append(z_val)
+                    pitches.append(0.0) # Placeholder for pitch
+    
+    # Sort by time
+    if times:
+        sorted_pairs = sorted(zip(times, heaves, pitches))
+        t_sorted, h_sorted, p_sorted = zip(*sorted_pairs)
         
-        # Parse Position (Heave) from centreOfRotation
-        pos_match = re.search(r'centreOfRotation\s*\(\s*([-\d\.eE]+)\s+([-\d\.eE]+)\s+([-\d\.eE]+)\s*\)', content)
-        if pos_match:
-            # z = float(pos_match.group(3))
-            # Actually, check if it translates?
-            # CoR moves with the body.
-            return float(pos_match.group(3))
-            
-    except Exception as e:
-        pass
-    return None
+        line_heave.set_data(t_sorted, h_sorted)
+        line_pitch.set_data(t_sorted, p_sorted)
+        
+        ax[0].relim()
+        ax[0].autoscale_view()
+        ax[1].relim()
+        ax[1].autoscale_view()
+        
+        ax[0].set_title(f"Heave vs Time (t={t_sorted[-1]:.2f}s)")
 
+    return line_heave, line_pitch
 def monitor(case_dir: Path):
     """
     Monitors processor0 directories for uniform/sixDoFRigidBodyMotionState
     """
     proc0 = case_dir / "processor0"
     
-    fig, ax1 = plt.subplots(1, 1)
-    ax1.set_ylabel('Heave (Z) [m]')
-    ax1.set_xlabel('Time [s]')
-    
-    line, = ax1.plot([], [], 'b-o', markersize=3)
-    
-    # Store history
-    history = {'t': [], 'z': []}
-    
-    def update(frame):
-        if not proc0.exists():
-            return line,
-            
-        # Find all time directories
-        # Filter for numeric names
-        try:
-            time_dirs = sorted(
-                [d for d in proc0.iterdir() if d.is_dir() and re.match(r'^[\d\.]+$', d.name)],
-                key=lambda x: float(x.name)
-            )
-        except:
-            return line,
 
-        # We can optimize by only checking new ones, but for now re-scan is fine for robustness
-        # Clear/Rebuild to handle restarts
-        history['t'] = []
-        history['z'] = []
-        
-        for t_dir in time_dirs:
-            t_val = float(t_dir.name)
-            fpath = t_dir / "uniform/sixDoFRigidBodyMotionState"
-            
-            if fpath.exists():
-                z = parse_state_file(fpath)
-                if z is not None:
-                    history['t'].append(t_val)
-                    history['z'].append(z)
-        
-        if history['t']:
-            line.set_data(history['t'], history['z'])
-            ax1.set_xlim(min(history['t']), max(history['t']) + 0.1)
-            # Dynamic Z scaling
-            z_min, z_max = min(history['z']), max(history['z'])
-            span = max(0.1, z_max - z_min)
-            ax1.set_ylim(z_min - span*0.2, z_max + span*0.2)
-            ax1.set_title(f"Time: {history['t'][-1]:.3f}s | Heave: {history['z'][-1]:.4f}m")
-            
-        return line,
+    global CASE_DIR, fig, ax, line_heave, line_pitch
+    CASE_DIR = case_dir
+    
+    fig, ax = plt.subplots(2, 1, figsize=(10, 8))
+    
+    # Heave
+    line_heave, = ax[0].plot([], [], 'b-', label='Heave (Z)')
+    ax[0].set_ylabel('Position Z [m]')
+    ax[0].grid(True)
+    ax[0].legend()
+    
+    # Pitch
+    line_pitch, = ax[1].plot([], [], 'r-', label='Pitch (deg)')
+    ax[1].set_ylabel('Pitch [deg]')
+    ax[1].set_xlabel('Time [s] / Step') # ambiguous units
+    ax[1].grid(True)
+    ax[1].legend()
 
-    ani = FuncAnimation(fig, update, interval=1000) # Check every 1s
+    ani = FuncAnimation(fig, update, interval=1000, blit=True) # Check every 1s
     plt.show()
 
 if __name__ == "__main__":
@@ -108,3 +99,4 @@ if __name__ == "__main__":
         
     logger.info(f"Monitoring {args.case_dir}...")
     monitor(args.case_dir)
+
