@@ -74,15 +74,13 @@ def verify_barge():
         sys.exit(1)
         
     # 2. Check Watertightness
-    # (Note: procedural mesh might have open ends if not capped, but our script attempts to cap)
-    # Actually, main script puts caps? 
-    # Current script REMOVED Fill Holes but used "Fill Caps" in CurveToMesh.
-    # So it should be manifold.
-    if not bm.is_manifold:
-        logger.warning("WARN: Mesh is NOT fully manifold. OpenFOAM requires watertight geometry.")
-        # Identify non-manifold elements?
-        # Non-manifold is okay for VOF sometimes if checks pass, but ideally closed.
-        # sys.exit(1) 
+    # Check if all edges are manifold (share exactly 2 faces)
+    # Boundary edges have 1 face. Wire edges have 0.
+    # A watertight hull should have NO boundary edges.
+    boundary_edges = [e for e in bm.edges if e.is_boundary]
+    
+    if boundary_edges:
+        logger.warning(f"WARN: Mesh is NOT fully manifold. Found {len(boundary_edges)} boundary edges.")
     else:
         logger.info("PASS: Mesh is manifold (watertight).")
         
@@ -120,6 +118,14 @@ def verify_barge():
     
     logger.info("ALL CHECKS PASSED")
     bm.free()
+    
+    # Cleanup
+    try:
+        if os.path.exists("barge_debug.blend"):
+            os.remove("barge_debug.blend")
+            logger.info("Cleanup: 'barge_debug.blend' removed.")
+    except Exception as e:
+        logger.warning(f"Cleanup failed: {e}")
 
 if __name__ == "__main__":
     try:

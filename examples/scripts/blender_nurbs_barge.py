@@ -149,7 +149,7 @@ def create_nurbs_barge():
         spline.points[pt_index].co = v4; pt_index += 1
         
     # Create Object
-    obj = bpy.data.objects.new("Barge_NURBS", curve_data)
+    obj = bpy.data.objects.new("Barge_Surface", curve_data)
     bpy.context.collection.objects.link(obj)
     
     # Mirror modifier to create full hull
@@ -157,12 +157,17 @@ def create_nurbs_barge():
     mod_mirror.use_axis[0] = False # X
     mod_mirror.use_axis[1] = True  # Y
     mod_mirror.use_axis[2] = False # Z
-    mod_mirror.use_merge_vertices = True
-    mod_mirror.merge_threshold = 0.01
     
-    # Solidify? Or cap ends?
-    # NURBS surfaces are open. To close, we'd need to cap.
-    # Conversion to Mesh + Fill is easier.
+    # API Change: use_mirror_merge in recent versions?
+    if hasattr(mod_mirror, "use_mirror_merge"):
+         mod_mirror.use_mirror_merge = True
+    else:
+         try:
+             mod_mirror.use_merge_vertices = True
+         except:
+             pass 
+             
+    mod_mirror.merge_threshold = 0.01
     
     logger.info("NURBS Surface Created.")
     return obj
@@ -173,24 +178,27 @@ def convert_to_mesh(obj):
     obj_eval = obj.evaluated_get(depsgraph)
     mesh = bpy.data.meshes.new_from_object(obj_eval)
     
-    new_obj = bpy.data.objects.new("Barge_Mesh", mesh)
+    new_obj = bpy.data.objects.new("Barge", mesh)
     bpy.context.collection.objects.link(new_obj)
     new_obj.location = obj.location
     
-    # Triangulate / Cap?
-    # Usually easier to fill holes in mesh mode.
+    # Ensure it's active
+    bpy.context.view_layer.objects.active = new_obj
+    
     return new_obj
 
 def main():
     clean_scene()
-    hull = create_nurbs_barge()
+    surface = create_nurbs_barge()
+    
+    # Convert to Mesh for usage/verification
+    mesh_obj = convert_to_mesh(surface)
+    
+    # Move surface to hidden collection or just hide?
+    # surface.hide_viewport = True
     
     # Save blend
     bpy.ops.wm.save_as_mainfile(filepath="barge_nurbs.blend")
-    
-    # Convert and Export STL (Optional)
-    mesh_obj = convert_to_mesh(hull)
-    bpy.ops.wm.save_as_mainfile(filepath="barge_nurbs_mesh.blend")
 
 if __name__ == "__main__":
     main()
