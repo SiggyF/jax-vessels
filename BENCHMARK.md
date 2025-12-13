@@ -16,6 +16,7 @@ This benchmark measures the performance of the full simulation pipeline, includi
 | **Grid Size** | **238,402 cells** |
 | **Solver Time (Total)** | **109 s** |
 | **Time per Step (Avg)** | **~0.02 s/step** |
+| **Real-Time Factor** | **0.046x** (21.8s to compute 1s) |
 | **Parallel Efficiency** | High (~520% CPU usage observed) |
 
 ### Optimization
