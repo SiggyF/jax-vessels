@@ -74,22 +74,47 @@ def verify_nurbs_barge():
     else:
         logger.warning("WARN: No vertices at midship to measure width.")
         
-    # 3. Raycast Inspection for Closure (Top & Bottom)
-    # Check X=50 (Midship)
+    # 3. Raycast Inspection for Closure (Top & Bottom & Transom)
     depsgraph = bpy.context.evaluated_depsgraph_get()
     
-    # Bottom
+    # Check Midship (X=50)
     h_up, _, _, _, _, _ = bpy.context.scene.ray_cast(depsgraph, (50, 0, -10), (0,0,1))
-    # Top
     h_dn, _, _, _, _, _ = bpy.context.scene.ray_cast(depsgraph, (50, 0, 10), (0,0,-1))
     
     if not (h_up and h_dn):
-        logger.error("FAIL: Hull is not closed at midship (Raycast failed).")
+        logger.error("FAIL: Hull is not closed at midship X=50.")
         sys.exit(1)
-    else:
-        logger.info("PASS: Hull is closed (Raycast hit Top and Bottom).")
         
-    # 4. Cleanup
+    # Check Transom (X=0) from behind (X=-1)
+    transom_origin = (-1.0, 0.0, 3.0)
+    transom_dir = (1.0, 0.0, 0.0)
+    h_transom, _, _, _, _, _ = bpy.context.scene.ray_cast(depsgraph, transom_origin, transom_dir)
+    
+    if not h_transom:
+        logger.error("FAIL: Transom is not closed (Ray from X=-1 missed).")
+        sys.exit(1)
+        
+    logger.info("PASS: Hull is fully closed (Midship & Transom).")
+    
+    # 4. Shape Quality (Keel Curvature at Stern)
+    # Check if bottom is curved at start (X=0 to X=0.1)
+    # Raycast UP from -5.0
+    def get_keel_z(x):
+        h, loc, _, _, _, _ = bpy.context.scene.ray_cast(depsgraph, (x, 0, -5), (0,0,1))
+        return loc.z if h else None
+
+    z0 = get_keel_z(0.0)
+    z01 = get_keel_z(0.1)
+    
+    if z0 is not None and z01 is not None:
+        diff = z0 - z01
+        logger.info(f"Stern Keel Drop (10cm): {diff:.4f}m")
+        if diff < 0.001:
+             logger.warning("WARN: Stern appears flat (expected curve).")
+        else:
+             logger.info("PASS: Stern rake has curvature.")
+    
+    # 5. Cleanup
     try:
         os.remove("barge_nurbs.blend")
         logger.info("Cleanup: 'barge_nurbs.blend' removed.")

@@ -1,6 +1,7 @@
 import bpy
 import math
 import logging
+import os
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
@@ -281,8 +282,23 @@ def main():
     mesh_obj.select_set(True)
     bpy.context.view_layer.objects.active = mesh_obj
     
-    # Save
+    # Save Blend
     bpy.ops.wm.save_as_mainfile(filepath="barge_nurbs.blend")
+    
+    # Export STL
+    stl_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "vessels", "barge_nurbs.stl")
+    os.makedirs(os.path.dirname(stl_path), exist_ok=True)
+    
+    # Ensure only Mesh is selected for export
+    # Blender 4.x STL Exporter: bpy.ops.wm.stl_export
+    if hasattr(bpy.ops.wm, "stl_export"):
+        bpy.ops.wm.stl_export(filepath=stl_path, export_selected_objects=True)
+    elif hasattr(bpy.ops.export_mesh, "stl"): # Fallback for <4.0
+        bpy.ops.export_mesh.stl(filepath=stl_path, use_selection=True)
+    else:
+        logger.error("No STL exporter found!")
+        
+    logger.info(f"Exported STL to {stl_path}")
 
 if __name__ == "__main__":
     main()

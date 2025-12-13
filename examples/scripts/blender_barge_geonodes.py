@@ -1,6 +1,7 @@
 import bpy
 import math
 import logging
+import os
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
@@ -603,8 +604,22 @@ def main():
 
     logger.info("Barge and Debug Objects Generated.")
     
-    # Save validation file
+    # Save validation    # Save
     bpy.ops.wm.save_as_mainfile(filepath="barge_debug.blend")
+    
+    # Export STL
+    stl_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "vessels", "barge_geonodes.stl")
+    os.makedirs(os.path.dirname(stl_path), exist_ok=True)
+    
+    # Blender 4.x STL Exporter
+    if hasattr(bpy.ops.wm, "stl_export"):
+        bpy.ops.wm.stl_export(filepath=stl_path, export_selected_objects=True)
+    elif hasattr(bpy.ops.export_mesh, "stl"):
+        bpy.ops.export_mesh.stl(filepath=stl_path, use_selection=True)
+    else:
+        logger.error("No STL exporter found!")
+        
+    logger.info(f"Exported STL to {stl_path}")
 
 if __name__ == "__main__":
     main()
