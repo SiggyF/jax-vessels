@@ -126,6 +126,9 @@ We provide two methods for generating hull geometries:
 ### 1. Blender Geometry Nodes (Recommended)
 Produces high-quality, organic, and simulation-ready meshes using Blender's procedural node system.
 
+> [!NOTE]
+> Requires **Blender 4.0** or later (for STL export support).
+
 ```bash
 # Generate KVLCC2 Tanker (320m) with Bulbous Bow
 blender -b -P examples/scripts/blender_ship_geonodes.py
@@ -235,3 +238,20 @@ The `examples/hulls/` directory contains generated STL files ready for simulatio
 **Features**:
 *   Pure rectangular geometry ("Shoebox"), ideal for initial verification of the OpenFOAM numerical setup without complex mesh features.
 *   Generated via `python examples/scripts/generate_hull.py --type box`.
+
+### `barge_geonodes.stl`
+**Type**: Parametric Inland Barge (Procedural)  
+**Dimensions**: 135m x 14.2m x 4m (Class Va)  
+**Features**:
+*   Generated using **Blender Geometry Nodes** (`examples/scripts/blender_barge_geonodes.py`).
+*   Procedural mesh with configurable stations and profiles.
+*   Features a tapered bow and raked stern.
+
+### `barge_nurbs.stl`
+**Type**: Parametric Inland Barge (NURBS)  
+**Dimensions**: 135m x 14.2m x 4m (Class Va)  
+**Features**:
+*   Generated using **Python-driven NURBS Surfaces** (`examples/scripts/blender_nurbs_barge.py`).
+*   Guaranteed C2 smoothness for high-quality hydrodynamics.
+*   Explicitly modeled deck and transom for perfect watertight closure.
+*   Pontoon-style hull with flat bottom and bilge radius.
