@@ -60,10 +60,20 @@ echo "=== Running interFoam ==="
 if [ -f "system/decomposeParDict" ]; then
     echo "Running in PARALLEL (6 cores)..."
     decomposePar > log.decomposePar
+    
+    # Optimization: Renumber mesh to reduce matrix bandwidth
+    echo "Optimization: Running renumberMesh (Parallel)..."
+    mpirun -np 6 renumberMesh -parallel -overwrite > log.renumberMesh
+    
     mpirun -np 6 interFoam -parallel > log.interFoam
     reconstructPar > log.reconstructPar
 else
     echo "Running in SERIAL..."
+    
+    # Optimization: Renumber mesh to reduce matrix bandwidth
+    echo "Optimization: Running renumberMesh (Serial)..."
+    renumberMesh -overwrite > log.renumberMesh
+    
     interFoam > log.interFoam
 fi
 tail -n 10 log.interFoam
