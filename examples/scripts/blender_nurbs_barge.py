@@ -97,6 +97,10 @@ def create_nurbs_barge():
     num_v = 5
     spline.points.add(num_u * num_v - 1) # Total points minus 1 (first already exists)
     
+    # CRITICAL: Set grid dimensions for Surface
+    spline.point_count_u = num_u
+    spline.point_count_v = num_v
+    
     # Configure Dimensions
     spline.use_cyclic_u = False
     spline.use_cyclic_v = False
