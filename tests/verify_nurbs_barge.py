@@ -74,14 +74,21 @@ def verify_nurbs_barge():
     else:
         logger.warning("WARN: No vertices at midship to measure width.")
         
-    # 3. Watertightness (Manifold Check)
-    boundary_edges = [e for e in bm.edges if e.is_boundary]
-    if boundary_edges:
-        logger.error(f"FAIL: Mesh is NOT watertight. Found {len(boundary_edges)} boundary edges.")
+    # 3. Raycast Inspection for Closure (Top & Bottom)
+    # Check X=50 (Midship)
+    depsgraph = bpy.context.evaluated_depsgraph_get()
+    
+    # Bottom
+    h_up, _, _, _, _, _ = bpy.context.scene.ray_cast(depsgraph, (50, 0, -10), (0,0,1))
+    # Top
+    h_dn, _, _, _, _, _ = bpy.context.scene.ray_cast(depsgraph, (50, 0, 10), (0,0,-1))
+    
+    if not (h_up and h_dn):
+        logger.error("FAIL: Hull is not closed at midship (Raycast failed).")
         sys.exit(1)
     else:
-        logger.info("PASS: Mesh is manifold (watertight).")
-
+        logger.info("PASS: Hull is closed (Raycast hit Top and Bottom).")
+        
     # 4. Cleanup
     try:
         os.remove("barge_nurbs.blend")

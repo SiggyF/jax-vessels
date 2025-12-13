@@ -57,24 +57,31 @@ def create_nurbs_barge():
     logger.info(f"Surface Grid: {u_count}x{v_count}")
     
     # 3. Shape the Points
-    # We have 10 U-rows. We map them to X=0..L
-    # U Stations:
-    # We want specific features: Transom, Rake Start, Parallel Start, Mid, Parallel End, Rake End, Cap.
-    # 10 points is enough for a nice shape.
-    # Let's manually define X for each of the 10 rows.
-    # 0: Transom (0.0)
-    # 1: Stern Rake (2.0)
-    # 2: Stern Rake (8.0)
-    # 3: Parallel Start (20.0)
-    # 4: Midbody (45.0)
-    # 5: Midbody (90.0)
-    # 6: Parallel End (115.0)
-    # 7: Bow Rake (125.0)
-    # 8: Bow Rake (132.0)
-    # 9: Cap (135.0)
     
-    x_coords = [0.0, 2.0, 8.0, 20.0, 45.0, 90.0, 115.0, 125.0, 132.0, 135.0]
+    # Define Target X Coordinates (for 10 rows)
+    x_targets = [0.0, 2.0, 8.0, 20.0, 45.0, 90.0, 115.0, 125.0, 132.0, 135.0]
     
+    # If u_count doesn't match x_targets (10), we must interpolate or resample
+    real_x_coords = []
+    if u_count == len(x_targets):
+        real_x_coords = x_targets
+    else:
+        logger.warning(f"Grid U {u_count} != Target {len(x_targets)}. Resampling X.")
+        # Linear map indices to 0..135 (Not ideal, loses feature alignment)
+        # Better: Interpolate x_targets indices to new range
+        for i in range(u_count):
+            t = i / (u_count - 1)
+            # Map t (0..1) to x_targets
+            # Simple approach: Map t to Total Length? No, we want features.
+            # Just Map t to feature list?
+            # Index in x_targets = t * (len-1)
+            f_idx = t * (len(x_targets) - 1)
+            idx_low = int(f_idx)
+            idx_high = min(idx_low + 1, len(x_targets) - 1)
+            frac = f_idx - idx_low
+            lrp = x_targets[idx_low] + (x_targets[idx_high] - x_targets[idx_low]) * frac
+            real_x_coords.append(lrp)
+
     # V Columns (10 available). We only need 5 to define the section (Keel..Deck).
     # We can use the first 5 and scrunch the others or use them for more detail?
     # Let's use 10 points for the section! Smoother bilge.
@@ -134,28 +141,48 @@ def create_nurbs_barge():
             k_bilge_end = (curr_half_b, keel_z + curr_r)
             k_deck = (curr_half_b, deck_z)
             
-            # Distribute t
+        # V4: Centerline Deck (Closed Loop)
+        k_deck_center = (0.0, deck_z) # Flat deck (no camber). Add camber here if needed.
+        
+        # Distribute t
+        # We need to map 0..1 to:
+        # 1. Bottom (Keel -> BilgeStart)
+        # 2. Bilge (Arc)
+        # 3. Side (BilgeEnd -> SideTop)
+        # 4. Deck (SideTop -> Centerline)
+        
+        # Segments weights:
+        # Bottom: 0.3
+        # Bilge: 0.2
+        # Side: 0.2
+        # Deck: 0.3
+        
+        for i in range(num_points_v):
+            t = i / (num_points_v - 1) # 0..1
+            
             y, z = 0, 0
-            if t < 0.3: # Bottom (Keel -> BilgeStart)
-                # t 0..0.3 maps to 0..1
+            if t < 0.3: # Bottom
                 lt = t / 0.3
                 y = k_keel[0] + (k_bilge_start[0] - k_keel[0]) * lt
                 z = k_keel[1] + (k_bilge_start[1] - k_keel[1]) * lt
-            elif t < 0.6: # Bilge (Arc)
-                lt = (t - 0.3) / 0.3
-                # Arc center
+            elif t < 0.5: # Bilge
+                lt = (t - 0.3) / 0.2
                 cy = curr_half_b - curr_r
                 cz = keel_z + curr_r
-                # Angle -90 to 0
                 ang = -math.pi/2 + lt * (math.pi/2)
                 y = cy + math.cos(ang) * curr_r
                 z = cz + math.sin(ang) * curr_r
-            else: # Side (BilgeEnd -> Deck)
-                lt = (t - 0.6) / 0.4
+            elif t < 0.7: # Side
+                lt = (t - 0.5) / 0.2
                 y = k_bilge_end[0] + (k_deck[0] - k_bilge_end[0]) * lt
                 z = k_bilge_end[1] + (k_deck[1] - k_bilge_end[1]) * lt
-                
+            else: # Deck
+                lt = (t - 0.7) / 0.3
+                y = k_deck[0] + (k_deck_center[0] - k_deck[0]) * lt
+                z = k_deck[1] + (k_deck_center[1] - k_deck[1]) * lt
+            
             points.append((y, z))
+            
         return points
 
     # Apply to Spline Points
@@ -178,15 +205,20 @@ def create_nurbs_barge():
     
     idx = 0
     for u_idx in range(u_count):
-        x = x_coords[u_idx] # Map indices to X
+        x = real_x_coords[u_idx]
         
+        # Generate section for THIS x, with exactly v_count points
         section_pts = get_section_profile(x, v_count)
         
         for v_idx in range(v_count):
-            y, z = section_pts[v_idx]
+            if v_idx < len(section_pts):
+                y, z = section_pts[v_idx]
+            else:
+                # Should not happen if loop logic matches
+                logger.error(f"IndexError at U={u_idx} V={v_idx}. Pts={len(section_pts)}")
+                y, z = 0, 0
             
             # Assign
-            # w=1.0
             spline.points[idx].co = (x, y, z, 1.0)
             idx += 1
             
