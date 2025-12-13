@@ -7,11 +7,11 @@ logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
 logger = logging.getLogger(__name__)
 
 def clean_scene():
-    bpy.ops.object.select_all(action='DESELECT')
-    bpy.ops.object.select_by_type(type='MESH')
-    bpy.ops.object.select_by_type(type='SURFACE')
+    # Delete everything including default Cube, Camera, Light
+    bpy.ops.object.select_all(action='SELECT')
     bpy.ops.object.delete()
-    # Purge
+    
+    # Purge orphan data
     for block in bpy.data.meshes:
         if block.users == 0: bpy.data.meshes.remove(block)
     for block in bpy.data.curves:
@@ -22,172 +22,214 @@ def create_nurbs_barge():
     L = 135.0
     B = 14.2
     H = 4.0
-    R = 0.8 # Bilge Radius
+    R = 0.8 
     HalfB = B / 2.0
     
-    # We define the control point grid (U x V)
-    # U = Longitudinal (X)
-    # V = Transverse (Y, Z) section curve
+    # Target Grid Size: 9 U stations x 5 V points
+    # We will create a 4x4 primitive and subdivide to get >= 9x5
+    # Subdivide (2 cuts) -> 10x10 grid.
+    # We will use the first 9 rows and 5 columns, or resample?
+    # Resample logic: Map our 9 defined stations to the 10 available U-rows.
+    # Or just use the 10 rows!
     
-    # U Stations (X positions)
-    u_stations = [
-        0.0,    # Transom
-        2.0,    # Stern
-        10.0,   # Stern Run
-        20.0,   # Parallel Start
-        67.5,   # Midship
-        115.0,  # Parallel End
-        125.0,  # Bow Entrance
-        132.0,  # Bow Tip
-        135.0   # Cap
-    ]
-    num_u = len(u_stations)
+    # 1. Create Primitive
+    # Location 0,0,0. Radius 1.
+    bpy.ops.surface.primitive_nurbs_surface_surface_add(radius=1, location=(0,0,0))
+    obj = bpy.context.active_object
+    obj.name = "Barge_Surface"
     
-    # V Control Points (For a Section)
-    # To approximate a box with bilge radius R:
-    # 4 Points (Order 3?): Keel, BilgeInner, BilgeOuter, Deck
-    # Or 5 Points (Order 4): Keel, BottomFlatEnd, Corner, SideStart, Deck
-    # Let's use 5 points for better control of the "Corner".
-    # P0: (0, 0) - Keel
-    # P1: (HalfB - R, 0) - Bottom Flat End
-    # P2: (HalfB, 0) - Corner Control (Weight?)
-    # P3: (HalfB, R) - Side Vertical Start
-    # P4: (HalfB, H) - Deck
+    # 2. Subdivide
+    bpy.ops.object.mode_set(mode='EDIT')
+    bpy.ops.curve.select_all(action='SELECT')
+    # 2 cuts -> 10x10 grid (4 points -> 3 segs -> 2 cuts/seg -> 4 + 6 = 10)
+    bpy.ops.curve.subdivide(number_cuts=2)
+    bpy.ops.object.mode_set(mode='OBJECT')
     
-    # However, the shape changes along U.
-    # We define a function `get_section_points(x)` that returns the 5 V-points.
+    spline = obj.data.splines[0]
     
-    def get_section_width_factor(x):
-        # 0..1 factor for Beam
-        if 20.0 <= x <= 115.0: return 1.0 # Parallel Midbody
-        
-        # Stern Taper
-        if x < 20.0:
-            # Transom width (x=0) ~ 0.6 * HalfB
-            # Parabolic or linear taper?
-            t = x / 20.0
-            return 0.6 + 0.4 * (t**0.5) # Blunt stern
-            
-        # Bow Taper
-        if x > 115.0:
-            # 115 -> 135
-            t = (x - 115.0) / 20.0
-            # Taper to 0 (or small nose)
-            # Nose width ~ 0.1 at 135
-            return 1.0 - 0.9 * (t**1.5)
-            
-        return 1.0
-        
-    def get_section_keel_rise(x):
-        # Rise of floor / tunnel at stern?
-        # Stern Tunnel: x < 25.
-        if x < 25.0:
-            # Rise to 1.8m at transom?
-            # Simple linear rise for NURBS demo
-            t = (25.0 - x) / 25.0
-            return 1.5 * (t**2)
-        return 0.0
-
-    # Create Curve Data
-    curve_data = bpy.data.curves.new('Barge_NURBS', type='SURFACE')
-    curve_data.dimensions = '3D'
-    
-    spline = curve_data.splines.new(type='NURBS')
-    
-    num_v = 5
-    spline.points.add(num_u * num_v - 1) # Total points minus 1 (first already exists)
-    
-    # CRITICAL: Set grid dimensions for Surface
-    spline.point_count_u = num_u
-    spline.point_count_v = num_v
-    
-    # Configure Dimensions
-    spline.use_cyclic_u = False
-    spline.use_cyclic_v = False
+    # CRITICAL: Enable endpoints so surface reaches the control points
     spline.use_endpoint_u = True
     spline.use_endpoint_v = True
-    spline.order_u = 4 # Degree 3
-    spline.order_v = 4 # Degree 3
     
-    # Populate Points
-    # Points are stored flat: u0v0, u0v1, ... u0vN, u1v0...
+    u_count = spline.point_count_u # Should be 10
+    v_count = spline.point_count_v # Should be 10
     
-    pt_index = 0
-    for i, x in enumerate(u_stations):
-        width_fac = get_section_width_factor(x)
-        keel_z = get_section_keel_rise(x)
+    logger.info(f"Surface Grid: {u_count}x{v_count}")
+    
+    # 3. Shape the Points
+    # We have 10 U-rows. We map them to X=0..L
+    # U Stations:
+    # We want specific features: Transom, Rake Start, Parallel Start, Mid, Parallel End, Rake End, Cap.
+    # 10 points is enough for a nice shape.
+    # Let's manually define X for each of the 10 rows.
+    # 0: Transom (0.0)
+    # 1: Stern Rake (2.0)
+    # 2: Stern Rake (8.0)
+    # 3: Parallel Start (20.0)
+    # 4: Midbody (45.0)
+    # 5: Midbody (90.0)
+    # 6: Parallel End (115.0)
+    # 7: Bow Rake (125.0)
+    # 8: Bow Rake (132.0)
+    # 9: Cap (135.0)
+    
+    x_coords = [0.0, 2.0, 8.0, 20.0, 45.0, 90.0, 115.0, 125.0, 132.0, 135.0]
+    
+    # V Columns (10 available). We only need 5 to define the section (Keel..Deck).
+    # We can use the first 5 and scrunch the others or use them for more detail?
+    # Let's use 10 points for the section! Smoother bilge.
+    # Logical section: 0=Keel, 10=Deck.
+    # distribution: 
+    # 0,1: Flat Bottom
+    # 2,3,4: Bilge Turn
+    # 5,6,7: Side
+    # 8,9: Deck Edge
+    
+    # Helper to get section profile
+    def get_section_profile(x, num_points_v):
+        # Returns list of (y, z) for this x
         
+        # 1. Calculate Envelope (Width, Height, KeelZ)
+        width_fac = 1.0
+        # Tapers
+        if x < 20.0: # Stern
+             t = x / 20.0
+             width_fac = 0.6 + 0.4 * (t**0.5)
+        elif x > 115.0: # Bow
+             t = (x - 115.0) / 20.0
+             width_fac = 1.0 - 0.9 * (t**1.5)
+             
         curr_half_b = HalfB * width_fac
-        # Adjust bilge radius if beam is too small?
+        
+        keel_z = 0.0
+        # Stern Tunnel / Rake
+        if x < 25.0:
+            t = (25.0 - x) / 25.0
+            keel_z = 1.8 * (t**2) # Tunnel height 1.8m
+            
+        deck_z = H
+        if x < 10.0: deck_z += 0.5 * ((10-x)/10)**2
+        if x > 120.0: deck_z += 1.0 * ((x-120)/15)**2
+        
         curr_r = min(R, curr_half_b * 0.9)
         
-        # V0: Keel
-        v0 = (x, 0.0, keel_z, 1.0)
-        
-        # V1: Bottom Flat End
-        v1 = (x, curr_half_b - curr_r, keel_z, 1.0)
-        
-        # V2: Corner (Control)
-        # To make a nice corner, place it at (HalfB, Keel_Z)
-        v2 = (x, curr_half_b, keel_z, 1.0) 
-        
-        # V3: Side Vertical Start
-        # Ensure side is vertical?
-        # For bow/stern flare, wall might slope.
-        # But let's assume vertical side for simplicity, just narrower.
-        v3 = (x, curr_half_b, keel_z + curr_r, 1.0)
-        
-        # V4: Deck
-        # Add sheer? (Deck height rises at ends)
-        sheer = 0.0
-        if x < 10.0: sheer = 0.5 * ((10-x)/10)**2
-        if x > 120.0: sheer = 1.0 * ((x-120)/15)**2
-        
-        v4 = (x, curr_half_b, H + sheer, 1.0)
-        
-        # Assign
-        spline.points[pt_index].co = v0; pt_index += 1
-        spline.points[pt_index].co = v1; pt_index += 1
-        spline.points[pt_index].co = v2; pt_index += 1
-        spline.points[pt_index].co = v3; pt_index += 1
-        spline.points[pt_index].co = v4; pt_index += 1
-        
-    # Create Object
-    obj = bpy.data.objects.new("Barge_Surface", curve_data)
-    bpy.context.collection.objects.link(obj)
+        # Generate Points along the section
+        # We trace a "virtual" U-shape and sample it N times
+        points = []
+        for i in range(num_points_v):
+            t = i / (num_points_v - 1) # 0..1
+            
+            # Map t to geometry
+            # 0.0 .. 0.4 -> Bottom
+            # 0.4 .. 0.6 -> Bilge
+            # 0.6 .. 1.0 -> Side
+            
+            # Use simple parametric section
+            # But we want explicit control.
+            # Let's interpolate between key points.
+            
+            # Key points of section:
+            k_keel = (0.0, keel_z)
+            k_bilge_start = (curr_half_b - curr_r, keel_z)
+            k_bilge_end = (curr_half_b, keel_z + curr_r)
+            k_deck = (curr_half_b, deck_z)
+            
+            # Distribute t
+            y, z = 0, 0
+            if t < 0.3: # Bottom (Keel -> BilgeStart)
+                # t 0..0.3 maps to 0..1
+                lt = t / 0.3
+                y = k_keel[0] + (k_bilge_start[0] - k_keel[0]) * lt
+                z = k_keel[1] + (k_bilge_start[1] - k_keel[1]) * lt
+            elif t < 0.6: # Bilge (Arc)
+                lt = (t - 0.3) / 0.3
+                # Arc center
+                cy = curr_half_b - curr_r
+                cz = keel_z + curr_r
+                # Angle -90 to 0
+                ang = -math.pi/2 + lt * (math.pi/2)
+                y = cy + math.cos(ang) * curr_r
+                z = cz + math.sin(ang) * curr_r
+            else: # Side (BilgeEnd -> Deck)
+                lt = (t - 0.6) / 0.4
+                y = k_bilge_end[0] + (k_deck[0] - k_bilge_end[0]) * lt
+                z = k_bilge_end[1] + (k_deck[1] - k_bilge_end[1]) * lt
+                
+            points.append((y, z))
+        return points
+
+    # Apply to Spline Points
+    # Points are laid out: row0_col0, row0_col1 ... row0_colM, row1_col0...
+    # Wait! Internal layout might be U-major or V-major?
+    # Usually p[u + v * u_count]? Or p[v + u * v_count]?
+    # Let's assume standard linear order.
+    # We can check coordinates to verify.
+    # BUT, we are overwriting them anyway.
     
-    # Mirror modifier to create full hull
+    # "The points are indexed by v * resolution_u + u" -> v is major?
+    # Or u * resolution_v + v?
+    # Let's iterate linearly and assign based on our assumed grid structure.
+    # If we get it transposed, the hull will be weird.
+    # NURBS Primitive is usually U=Cyclic? No, Surface is usually grid.
+    
+    # We will assume U is the 'long' dimension (10) and V is the short (10).
+    # Since both are 10, it's symmetric.
+    # We map "U" to X and "V" to Section.
+    
+    idx = 0
+    for u_idx in range(u_count):
+        x = x_coords[u_idx] # Map indices to X
+        
+        section_pts = get_section_profile(x, v_count)
+        
+        for v_idx in range(v_count):
+            y, z = section_pts[v_idx]
+            
+            # Assign
+            # w=1.0
+            spline.points[idx].co = (x, y, z, 1.0)
+            idx += 1
+            
+    # Apply Mirror
     mod_mirror = obj.modifiers.new(name="Mirror", type='MIRROR')
     mod_mirror.use_axis[0] = False # X
     mod_mirror.use_axis[1] = True  # Y
     mod_mirror.use_axis[2] = False # Z
-    
-    # API Change: use_mirror_merge in recent versions?
     if hasattr(mod_mirror, "use_mirror_merge"):
          mod_mirror.use_mirror_merge = True
     else:
-         try:
-             mod_mirror.use_merge_vertices = True
-         except:
-             pass 
-             
+         try: mod_mirror.use_merge_vertices = True
+         except: pass     
     mod_mirror.merge_threshold = 0.01
-    
-    logger.info("NURBS Surface Created.")
+
+    logger.info("NURBS Surface Created via Ops.")
     return obj
 
 def convert_to_mesh(obj):
-    # Convert to mesh
     depsgraph = bpy.context.evaluated_depsgraph_get()
     obj_eval = obj.evaluated_get(depsgraph)
     mesh = bpy.data.meshes.new_from_object(obj_eval)
     
     new_obj = bpy.data.objects.new("Barge", mesh)
     bpy.context.collection.objects.link(new_obj)
+    bpy.context.view_layer.objects.active = new_obj
+    new_obj.select_set(True) # Select the new object
     new_obj.location = obj.location
     
-    # Ensure it's active
-    bpy.context.view_layer.objects.active = new_obj
+    # Close the Hull (Watertight)
+    # The NURBS surface is open at the top (Deck) and Transom.
+    # Convert to mesh leaves these open. We must fill them.
+    
+    bpy.ops.object.mode_set(mode='EDIT')
+    bpy.ops.mesh.select_all(action='SELECT')
+    
+    # Fill Holes (Covers Deck and Transom openings)
+    bpy.ops.mesh.fill_holes(sides=0) # 0 = Unlimited sides
+    
+    # Ensure Normals are consistent (pointing out)
+    bpy.ops.mesh.normals_make_consistent(inside=False)
+    
+    bpy.ops.object.mode_set(mode='OBJECT')
     
     return new_obj
 
@@ -195,13 +237,10 @@ def main():
     clean_scene()
     surface = create_nurbs_barge()
     
-    # Convert to Mesh for usage/verification
-    mesh_obj = convert_to_mesh(surface)
+    # Convert to Mesh
+    convert_to_mesh(surface)
     
-    # Move surface to hidden collection or just hide?
-    # surface.hide_viewport = True
-    
-    # Save blend
+    # Save
     bpy.ops.wm.save_as_mainfile(filepath="barge_nurbs.blend")
 
 if __name__ == "__main__":
