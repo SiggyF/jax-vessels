@@ -270,7 +270,16 @@ def main():
     surface = create_nurbs_barge()
     
     # Convert to Mesh
-    convert_to_mesh(surface)
+    mesh_obj = convert_to_mesh(surface)
+    
+    # Hide the Source Surface to avoid confusion
+    surface.hide_viewport = True
+    surface.hide_render = True
+    
+    # Select the Mesh
+    bpy.ops.object.select_all(action='DESELECT')
+    mesh_obj.select_set(True)
+    bpy.context.view_layer.objects.active = mesh_obj
     
     # Save
     bpy.ops.wm.save_as_mainfile(filepath="barge_nurbs.blend")
