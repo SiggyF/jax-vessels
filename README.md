@@ -45,6 +45,13 @@ The simulation utilizes a **body-fixed Eulerian reference frame**.
 *   **Moving Water**: The water flows past the hull with a defined velocity.
 *   This mimics a circulating water channel test and avoids dynamic mesh motion complexity.
 
+### Shallow Water & Phase-Coupled Soft Start (New in v0.2.2)
+To simulate **realistic inland waterways** (rivers/canals):
+*   **Depth**: The domain is explicitly set to **10m** (z-min = -10).
+*   **Bathymetry**: The bottom boundary is a **Slip Wall** (hard riverbed) rather than a symmetry plane.
+*   **Soft Start**: The inlet velocity ramps from 0 to target (e.g., 2 m/s) over 10s to prevent impulse shocks.
+*   **Phase Coupling**: Air velocity is strictly zeroed at the inlet ($U_{air} = 0$), while water follows the ramp ($U_{water} \propto \alpha \cdot t$). This prevents unphysical high-speed air currents.
+
 ![Numerical Scheme Mesh](docs/mesh_slice.png)
 *Figure: Cross-section of the mesh generation showing the immersed boundary representation.*
 
