@@ -1,6 +1,6 @@
 [project]
 name = "ship-model"
-version = "0.2.2"
+version = "0.2.4"
 description = "Ship model visualization and simulation tools"
 readme = "README.md"
 requires-python = ">=3.10"
