@@ -1,0 +1,21 @@
+regions
+(
+    boxToCell
+    {
+        box ( -100 -150 -10 ) ( 400 150 1.5 ); // Water to z=1.5
+        fieldValues
+        (
+            volScalarFieldValue alpha.water 1
+        );
+    }
+
+    // Dam break / Wave initiation block at inlet
+    boxToCell
+    {
+        box ( -100 -150 0 ) ( -80 150 10 );
+        fieldValues
+        (
+            volScalarFieldValue alpha.water 1
+        );
+    }
+);

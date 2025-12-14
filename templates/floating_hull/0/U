@@ -22,43 +22,8 @@ boundaryField
 {
     inlet
     {
-        type            codedFixedValue;
-        value           uniform (0 0 0);
-        name            inletURampAlpha;
-        code
-        #{
-            const fvPatch& patch = this->patch();
-            const scalar t = this->db().time().value();
-            
-            // Ramp parameters
-            const scalar rampTime = 10.0;
-            const scalar targetU = 2.0;
-            
-            // Calculate current ramp velocity
-            scalar uMag = 0.0;
-            if (t < rampTime)
-            {
-                uMag = (t / rampTime) * targetU;
-            }
-            else
-            {
-                uMag = targetU;
-            }
-            
-            // Get alpha field from the registry
-            // Need to lookup the specific patch field for alpha.water
-            const volScalarField& alpha = this->db().lookupObject<volScalarField>("alpha.water");
-            const fvPatchScalarField& alphaPatch = alpha.boundaryField()[patch.index()];
-            
-            vectorField& field = *this;
-            
-            forAll(field, facei)
-            {
-                // U = ramp * alpha * (1 0 0)
-                // Effectively 0 in air, uMag in water
-                field[facei] = vector(uMag * alphaPatch[facei], 0, 0);
-            }
-        #};
+        type            fixedValue;
+        value           uniform (0 0 0); // No inflow for static test
     }
 
     outlet

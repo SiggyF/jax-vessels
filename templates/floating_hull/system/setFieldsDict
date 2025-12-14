@@ -20,16 +20,6 @@ defaultFieldValues
     volScalarFieldValue alpha.water 0
 );
 
-regions
-(
-    boxToCell
-    {
-        box ( -100 -150 -10 ) ( 400 150 1.5 ); // Water to z=1.5 (Perturbation: Drop test)
-        fieldValues
-        (
-            volScalarFieldValue alpha.water 1
-        );
-    }
-);
+#include "include/setFields_active"
 
 // ************************************************************************* //

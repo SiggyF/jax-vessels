@@ -105,12 +105,41 @@ To run a test case manually (e.g., `kcs_hull`):
         mpirun -np 6 interFoam -parallel
         reconstructPar
         ```
+      ## Model Philosophy and Verification
 
-4.  **Visualize (ParaView)**:
-    Convert results to VTK format:
-    ```bash
-    foamToVTK
-    ```
+### Verification Matrix
+We employ a 4-step "Crawl, Walk, Run" verification matrix to isolate sources of instability:
+1.  **Static Still**: Baseline mesh/solver stability.
+2.  **Static Waves**: Wave boundary condition stability.
+3.  **Dynamic Still**: 6DoF solver stability.
+4.  **Dynamic Waves**: Full coupled physics.
+
+See the [Verification Report](docs/verification_report.md) for detailed results and stability plots.
+
+We employ a systematic, 4-step verification strategy to ensure simulation stability and physical correctness. Each template builds upon the previous one, adding a single layer of complexity:
+
+1.  **Still Water (`templates/still_water`)**: 
+    *   **Goal**: Verify numeric solver stability.
+    *   **Setup**: Shuttle water domain (depth 10m), no object, no flow.
+    *   **Success Criteria**: Zero max velocity, stable time step.
+
+2.  **Wave Tank (`templates/wave_tank`)**:
+    *   **Goal**: Verify boundary conditions and wave propagation.
+    *   **Difference**: Adds **Inflow** (or wave generation) to the Still Water base.
+    *   **Success Criteria**: Stable wave propagation, non-reflective outlet.
+
+3.  **Static Hull (`templates/floating_hull` with `staticFvMesh`)**:
+    *   **Goal**: Verify meshing (`snappyHexMesh`) and hydrostatics.
+    *   **Difference**: Adds the **Hull Geometry** to the Wave Tank.
+    *   **Setup**: Hull is fixed (static). Water depth 10m.
+    *   **Success Criteria**: Successful mesh generation, correct displacement/draft.
+
+4.  **Dynamic Hull (`templates/floating_hull` with `sixDoF`)**:
+    *   **Goal**: Verify rigid body dynamics.
+    *   **Difference**: Adds **6DoF Motion** to the Static Hull.
+    *   **Success Criteria**: Stable heave/pitch motion, physical settling.
+
+**Consistent setup**: All simulations are configured for **Shallow Water** (Depth = 10m) to represent realistic inland shipping conditions.
     Open the generated `.vtk` files in the `VTK/` directory using ParaView.
 
 ## Validation
@@ -226,6 +255,15 @@ The `examples/hulls/` directory contains generated STL files ready for simulatio
 *   **High-Fidelity Bulbous Bow**: Generated via volumetric fusion of an ellipsoidal primitive and the hull body, resulting in a smooth, organic transition.
 *   **CFD-Ready Topology**: Remeshed using a uniform Voxel Grid (0.5m) to produce a structured, quad-dominant mesh ideal for `snappyHexMesh`.
 *   **Watertight**: Guaranteed manifold geometry due to the volume-to-mesh workflow.
+
+## Known Issues
+
+### Docker and Root User
+OpenFOAM v2406 refuses to load shared objects (dynamic libraries) if they were created by the root user, or if the process is running as root in certain contexts.
+- **Symptom**: `Exit code 139` (Segfault) or `cannot open shared object file`.
+- **Solution**: The Dockerfile now defaults to the `ubuntu` user. Ensure all OpenFOAM artifacts are owned by the non-root user.
+
+## Project Structure
 
 ### `tanker_kvlcc2_like.stl`
 **Type**: KVLCC2-like Tanker Representation  

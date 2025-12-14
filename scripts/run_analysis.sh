@@ -9,5 +9,10 @@ else
     echo "Warning: OpenFOAM environment not found."
 fi
 
+# Source Virtual Environment
+if [ -f /app/.venv/bin/activate ]; then
+    source /app/.venv/bin/activate
+fi
+
 # Execute the command passed as arguments in the OpenFOAM environment
 exec "$@"

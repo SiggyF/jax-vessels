@@ -23,9 +23,9 @@ startTime       0;
 
 stopAt          endTime;
 
-endTime         5.0;
+endTime         30.0;
 
-deltaT          0.001;
+deltaT          0.0005;
 
 writeControl    runTime;
 
@@ -52,31 +52,6 @@ maxAlphaCo      1.0;
 
 maxDeltaT       1;
 
-functions
-{
-    forces
-    {
-        type            forces;
-        libs            ("libforces.so");
-        writeControl    timeStep;
-        writeInterval   1;
-        patches         (hull);
-        rho             rhoInf;
-        log             yes;
-        rhoInf          1025;
-        CofR            (67.5 0 2); // Update CofR to match CoM
-    }
-
-    sixDoFState
-    {
-        type            sixDoFRigidBodyMotionState;
-        libs            ("libsixDoFRigidBodyMotion.so");
-        writeControl    timeStep;
-        writeInterval   1;
-        velocity        yes;
-        acceleration    yes;
-        log             yes;
-    }
-}
+#include "include/functions_active"
 
 // ************************************************************************* //

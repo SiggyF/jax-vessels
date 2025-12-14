@@ -22,27 +22,8 @@ boundaryField
 {
     inlet
     {
-        type            codedFixedValue;
-        value           uniform 0;
-        name            inletAlphaDepth;
-        code
-        #{
-            const fvPatch& patch = this->patch();
-            const vectorField& Cf = patch.Cf();
-            scalarField& field = *this;
-
-            forAll(Cf, facei)
-            {
-                if (Cf[facei].z() <= 0)
-                {
-                    field[facei] = 1.0;
-                }
-                else
-                {
-                    field[facei] = 0.0;
-                }
-            }
-        #};
+        type            fixedValue;
+        value           uniform 0; // Inflow is Air for static test to avoid codedBC issues
     }
 
     outlet

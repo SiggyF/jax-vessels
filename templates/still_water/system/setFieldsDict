@@ -24,7 +24,7 @@ regions
 (
     boxToCell
     {
-        box (-100 -150 -100) (400 150 0); // Water from bottom up to z=0
+        box (-100 -150 -10) (400 150 0); // Water from bottom up to z=0
         fieldValues
         (
             volScalarFieldValue alpha.water 1 // Set water phase

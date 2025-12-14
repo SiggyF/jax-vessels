@@ -8,7 +8,16 @@ if [ -z "$CASE_NAME" ]; then
     echo "Usage: $0 <case_name>"
     echo "Available cases: still_water, wave_tank, base_case"
     exit 1
+    echo "Available cases: still_water, wave_tank, base_case"
+    exit 1
 fi
+
+# Memory logging (User request: Elegant monitoring)
+# Log memory every 5 seconds with timestamp
+vmstat -S M 5 >> memory_log.txt &
+MEM_PID=$!
+
+trap "kill $MEM_PID 2>/dev/null || true" EXIT
 
 TEMPLATE_DIR="templates/$CASE_NAME"
 

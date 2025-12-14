@@ -15,6 +15,6 @@ fi
 echo "Running in Docker ($IMAGE_NAME)..."
 docker run --rm -it \
     -v "$(pwd):/app" \
-    -u $(id -u):$(id -g) \
+    -v jax-vessels-venv:/app/.venv \
     $IMAGE_NAME \
     "$@"

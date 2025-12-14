@@ -1,0 +1,20 @@
+functions
+{
+    failFast
+    {
+        type            coded;
+        libs            ("libutilityFunctionObjects.so");
+        name            checkDeltaT;
+        code
+        #{
+             if (mesh.time().deltaTValue() < 1e-5)
+             {
+                 Info<< "Fatally aborting: deltaT (" << mesh.time().deltaTValue() 
+                     << ") is less than 1e-5." << endl;
+                 exit(1);
+             }
+        #};
+        writeControl    timeStep;
+        writeInterval   1;
+    }
+}

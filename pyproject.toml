@@ -1,6 +1,6 @@
 [project]
 name = "ship-model"
-version = "0.2.1"
+version = "0.2.2"
 description = "Ship model visualization and simulation tools"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -16,6 +16,8 @@ dependencies = [
     "mako",
     "vtk>=9.5.2",
     "pyvista>=0.46.4",
+    "pandas",
+    "meshmagick @ git+https://github.com/LHEEA/meshmagick",
 ]
 
 [project.scripts]
@@ -24,6 +26,9 @@ openfoam-run = "openfoam_runner.cli:main"
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
+
+[tool.hatch.metadata]
+allow-direct-references = true
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/jax_vessels", "src/openfoam_runner"]

@@ -1,66 +1,78 @@
-# Switch to a standard Ubuntu base
-FROM ubuntu:24.04
-
-# Avoid interactive prompts
+# Common Base
+FROM ubuntu:24.04 AS base
 ENV DEBIAN_FRONTEND=noninteractive
+WORKDIR /app
 
-# Install system dependencies
+# Install system dependencies (Common)
 RUN apt-get update && apt-get install -y \
     curl \
     wget \
     gnupg2 \
     lsb-release \
     software-properties-common \
-    python3-pip \
-    python3-venv \
     sudo \
+    git \
+    libgl1 \
+    libxrender1 \
     && rm -rf /var/lib/apt/lists/*
 
-# Add OpenFOAM repository (using dl.openfoam.com)
-RUN curl -s https://dl.openfoam.com/add-debian-repo.sh | bash
-# Install OpenFOAM (v2406)
-RUN apt-get update && apt-get install -y openfoam2406-default && rm -rf /var/lib/apt/lists/*
-
-# Source OpenFOAM environment for all interactive shells
-RUN echo "source /usr/lib/openfoam/openfoam2406/etc/bashrc" >> /etc/bash.bashrc
-
-# Install uv (system-wide)
-ENV UV_INSTALL_DIR="/usr/local/bin"
-RUN curl -LsSf https://astral.sh/uv/install.sh | sh
-
-# Setup Work Directory
+# Stage 2: OpenFOAM Environment
+FROM base AS openfoam
 WORKDIR /app
 
-# Setup venv in a standard location
+# Add OpenFOAM Repo
+RUN curl -s https://dl.openfoam.com/add-debian-repo.sh | bash
+
+# Install OpenFOAM
+RUN apt-get update && apt-get install -y openfoam2406-default && rm -rf /var/lib/apt/lists/*
+
+# Source OpenFOAM
+RUN echo "source /usr/lib/openfoam/openfoam2406/etc/bashrc" >> /etc/bash.bashrc
+
+# Copy Scripts (OpenFOAM specific wrappers)
+COPY scripts/run_analysis.sh /usr/local/bin/run-analysis
+RUN chmod +x /usr/local/bin/run-analysis
+COPY scripts/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
+# User Setup (OpenFOAM often requires root for some tasks, or user switching)
+# Keeping standard setup for simulation
+RUN chown -R 1000:1000 /app
+USER 1000:1000
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
+CMD ["run-analysis"]
+
+# Stage 3: Python Environment (Analysis)
+FROM base AS python-env
+WORKDIR /app
+
+# Python specific deps
+RUN apt-get update && apt-get install -y \
+    python3-pip \
+    python3-venv \
+    && rm -rf /var/lib/apt/lists/*
+
+# Setup User
+RUN chown -R 1000:1000 /app
+USER 1000:1000
+
+# Install uv (user local)
+ENV UV_INSTALL_DIR="/home/ubuntu/.local/bin"
+RUN curl -LsSf https://astral.sh/uv/install.sh | sh
+ENV PATH="/home/ubuntu/.local/bin:$PATH"
 ENV UV_PROJECT_ENVIRONMENT="/app/.venv"
 ENV VIRTUAL_ENV="/app/.venv"
 ENV PATH="/app/.venv/bin:$PATH"
 
-# Copy project files
-COPY pyproject.toml uv.lock ./
-COPY src ./src
-COPY templates ./templates
-COPY examples ./examples
-COPY README.md ./
+# Copy Project Definitions
+COPY --chown=1000:1000 pyproject.toml uv.lock ./
+COPY --chown=1000:1000 src ./src
+COPY --chown=1000:1000 templates ./templates
+COPY --chown=1000:1000 examples ./examples
+COPY --chown=1000:1000 README.md ./
 
-# Install python dependencies
+# Install Python Dependencies
 RUN uv sync --frozen
 
-# Copy runner script
-COPY scripts/run_analysis.sh /usr/local/bin/run-analysis
-RUN chmod +x /usr/local/bin/run-analysis
-
-# Copy entrypoint script (while still root)
-COPY scripts/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
-RUN chmod +x /usr/local/bin/docker-entrypoint.sh
-
-# Change ownership of the app directory to the ubuntu user
-RUN chown -R ubuntu:ubuntu /app
-
-# Switch to the non-root 'ubuntu' user (UID 1000)
-USER ubuntu
-
-# Reset entrypoint to use the script
-ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
-# Default command: run the python tool help via the wrapper
-CMD ["run-analysis", "openfoam-run", "--help"]
+# Default command
+CMD ["uv", "run", "python"]
