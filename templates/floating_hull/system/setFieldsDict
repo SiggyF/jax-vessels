@@ -24,7 +24,7 @@ regions
 (
     boxToCell
     {
-        box ( -100 -150 -100 ) ( 400 150 1.5 ); // Water to z=1.5 (Perturbation: Drop test)
+        box ( -100 -150 -10 ) ( 400 150 1.5 ); // Water to z=1.5 (Perturbation: Drop test)
         fieldValues
         (
             volScalarFieldValue alpha.water 1

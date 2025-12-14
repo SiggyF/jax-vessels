@@ -1,11 +1,8 @@
 # Switch to a standard Ubuntu base
-FROM ubuntu:22.04
+FROM ubuntu:24.04
 
 # Avoid interactive prompts
 ENV DEBIAN_FRONTEND=noninteractive
-
-# Run as root by default to avoid permission complexity
-USER root
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
@@ -53,7 +50,17 @@ RUN uv sync --frozen
 COPY scripts/run_analysis.sh /usr/local/bin/run-analysis
 RUN chmod +x /usr/local/bin/run-analysis
 
-# Reset entrypoint to be safe
-ENTRYPOINT []
+# Copy entrypoint script (while still root)
+COPY scripts/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
+# Change ownership of the app directory to the ubuntu user
+RUN chown -R ubuntu:ubuntu /app
+
+# Switch to the non-root 'ubuntu' user (UID 1000)
+USER ubuntu
+
+# Reset entrypoint to use the script
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 # Default command: run the python tool help via the wrapper
 CMD ["run-analysis", "openfoam-run", "--help"]

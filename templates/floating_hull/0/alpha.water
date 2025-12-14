@@ -22,8 +22,27 @@ boundaryField
 {
     inlet
     {
-        type            fixedValue;
+        type            codedFixedValue;
         value           uniform 0;
+        name            inletAlphaDepth;
+        code
+        #{
+            const fvPatch& patch = this->patch();
+            const vectorField& Cf = patch.Cf();
+            scalarField& field = *this;
+
+            forAll(Cf, facei)
+            {
+                if (Cf[facei].z() <= 0)
+                {
+                    field[facei] = 1.0;
+                }
+                else
+                {
+                    field[facei] = 0.0;
+                }
+            }
+        #};
     }
 
     outlet
@@ -33,7 +52,7 @@ boundaryField
 
     bottom
     {
-        type            symmetryPlane;
+        type            zeroGradient;
     }
 
     top

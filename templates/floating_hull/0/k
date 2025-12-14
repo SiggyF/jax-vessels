@@ -35,7 +35,8 @@ boundaryField
 
     bottom
     {
-        type            symmetryPlane;
+        type            kqRWallFunction;
+        value           uniform 0.01;
     }
 
     top

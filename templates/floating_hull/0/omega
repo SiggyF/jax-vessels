@@ -35,7 +35,8 @@ boundaryField
 
     bottom
     {
-        type            symmetryPlane;
+        type            omegaWallFunction;
+        value           uniform 1;
     }
 
     top

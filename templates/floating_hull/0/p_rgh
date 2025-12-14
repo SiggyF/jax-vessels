@@ -34,7 +34,8 @@ boundaryField
 
     bottom
     {
-        type            symmetryPlane;
+        type            fixedFluxPressure;
+        value           uniform 0;
     }
 
     top

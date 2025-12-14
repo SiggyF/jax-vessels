@@ -16,32 +16,67 @@ FoamFile
 
 dimensions      [0 1 -1 0 0 0 0];
 
-internalField   uniform (10 0 0);
+internalField   uniform (0 0 0);
 
 boundaryField
 {
     inlet
     {
-        type            fixedValue;
-        value           uniform (10 0 0);
+        type            codedFixedValue;
+        value           uniform (0 0 0);
+        name            inletURampAlpha;
+        code
+        #{
+            const fvPatch& patch = this->patch();
+            const scalar t = this->db().time().value();
+            
+            // Ramp parameters
+            const scalar rampTime = 10.0;
+            const scalar targetU = 2.0;
+            
+            // Calculate current ramp velocity
+            scalar uMag = 0.0;
+            if (t < rampTime)
+            {
+                uMag = (t / rampTime) * targetU;
+            }
+            else
+            {
+                uMag = targetU;
+            }
+            
+            // Get alpha field from the registry
+            // Need to lookup the specific patch field for alpha.water
+            const volScalarField& alpha = this->db().lookupObject<volScalarField>("alpha.water");
+            const fvPatchScalarField& alphaPatch = alpha.boundaryField()[patch.index()];
+            
+            vectorField& field = *this;
+            
+            forAll(field, facei)
+            {
+                // U = ramp * alpha * (1 0 0)
+                // Effectively 0 in air, uMag in water
+                field[facei] = vector(uMag * alphaPatch[facei], 0, 0);
+            }
+        #};
     }
 
     outlet
     {
         type            inletOutlet;
-        inletValue      uniform (10 0 0);
-        value           uniform (10 0 0);
+        inletValue      uniform (0 0 0);
+        value           uniform (0 0 0);
     }
 
     bottom
     {
-        type            symmetryPlane;
+        type            slip;
     }
 
     top
     {
         type            pressureInletOutletVelocity;
-        value           uniform (10 0 0);
+        value           uniform (0 0 0);
     }
 
     side_left
