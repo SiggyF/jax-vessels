@@ -116,6 +116,10 @@ We employ a 4-step "Crawl, Walk, Run" verification matrix to isolate sources of 
 
 See the [Verification Report](docs/verification_report.md) for detailed results and stability plots.
 
+### Stability Verification (Matrix 1)
+![Stability Matrix 1](docs/images/matrix1_static_still.png)
+*Figure: Baseline stability verification for Static Hull in Still Water.*
+
 We employ a systematic, 4-step verification strategy to ensure simulation stability and physical correctness. Each template builds upon the previous one, adding a single layer of complexity:
 
 1.  **Still Water (`templates/still_water`)**: 
