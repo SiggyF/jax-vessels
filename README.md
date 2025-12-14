@@ -55,6 +55,10 @@ To simulate **realistic inland waterways** (rivers/canals):
 ![Numerical Scheme Mesh](docs/mesh_slice.png)
 *Figure: Cross-section of the mesh generation showing the immersed boundary representation.*
 
+### Visual Showcase
+![Streamlines](docs/showcase_streamlines.png)
+*Figure: Zoomed-in view of the hull interaction with the shallow water flow (initialization phase), showing streamlines colored by velocity.*
+
 ## Documentation
 *   [OpenFOAM Case Setup](docs/openfoam_setup.md): Explanation of the simulation template.
 *   [Test Case Templates](templates/base_case/README.md): Detailed documentation of the specific templates.
