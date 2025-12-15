@@ -1,7 +1,6 @@
 #!/bin/bash
 set -e
-source /usr/lib/openfoam/openfoam2406/etc/bashrc || true
-export LD_LIBRARY_PATH=/usr/lib/openfoam/openfoam2406/platforms/linuxARM64GccDPInt32Opt/lib:$LD_LIBRARY_PATH
+# Environment should be loaded by the caller/entrypoint
 
 # Usage: ./scripts/run_matrix.sh <variant>
 # Variants:

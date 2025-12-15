@@ -1,8 +1,4 @@
----
-title: Simulation Stalls at t=0.42s with Container Load
-labels: bug, physics
-assignees: baart_f
----
+# Simulation Stalls at t=0.42s with Container Load
 
 ## Description
 The OpenFOAM stability simulation (`matrix_dynamic_still`) stalls at approximately `t=0.42s` when simulating the container load.

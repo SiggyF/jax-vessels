@@ -2,9 +2,8 @@
 
 
 # Source OpenFOAM environment
-if [ -f "/usr/lib/openfoam/openfoam2406/etc/bashrc" ]; then
-    source /usr/lib/openfoam/openfoam2406/etc/bashrc
-fi
+# Source OpenFOAM environment
+source /usr/local/bin/load-openfoam.sh
 
 # Execute the provided command
 exec "$@"

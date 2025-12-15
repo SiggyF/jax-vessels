@@ -2101,7 +2101,7 @@ wheels = [
 
 [[package]]
 name = "ship-model"
-version = "0.2.1"
+version = "0.2.4"
 source = { editable = "." }
 dependencies = [
     { name = "brax" },
