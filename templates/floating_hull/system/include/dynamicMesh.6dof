@@ -9,12 +9,12 @@ sixDoFRigidBodyMotionCoeffs
     innerDistance   5;
     outerDistance   20;
 
-    mass            2010000;
-    centreOfMass    (67.5 0 2);
+    mass            2040000;
+    centreOfMass    (67.5 0 1.0);
     momentOfInertia (25000000 3000000000 3000000000); 
 
     report          on;
-    accelerationRelaxation 0.4;
+    accelerationRelaxation 0.3;
     accelerationDamping    0.9;
     
     solver
@@ -36,4 +36,8 @@ sixDoFRigidBodyMotionCoeffs
             axis (0 1 0); 
         }
     }
+
+    // restraints
+    // {
+    // }
 }

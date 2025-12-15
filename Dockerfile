@@ -27,19 +27,22 @@ RUN curl -s https://dl.openfoam.com/add-debian-repo.sh | bash
 RUN apt-get update && apt-get install -y openfoam2406-default && rm -rf /var/lib/apt/lists/*
 
 # Source OpenFOAM
-RUN echo "source /usr/lib/openfoam/openfoam2406/etc/bashrc" >> /etc/bash.bashrc
+RUN echo "source /usr/local/bin/load-openfoam.sh" >> /etc/bash.bashrc
+ENV BASH_ENV="/usr/local/bin/load-openfoam.sh"
 
 # Copy Scripts (OpenFOAM specific wrappers)
 COPY scripts/run_analysis.sh /usr/local/bin/run-analysis
 RUN chmod +x /usr/local/bin/run-analysis
 COPY scripts/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+COPY scripts/load_openfoam.sh /usr/local/bin/load-openfoam.sh
+RUN chmod +x /usr/local/bin/load-openfoam.sh
 
 # User Setup (OpenFOAM often requires root for some tasks, or user switching)
 # Keeping standard setup for simulation
 RUN chown -R 1000:1000 /app
 USER 1000:1000
-ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
+# ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 CMD ["run-analysis"]
 
 # Stage 3: Python Environment (Analysis)
