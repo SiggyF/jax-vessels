@@ -21,7 +21,7 @@ This case verifies the correct coupling between the pressure boundary condition 
 
 ## Configuration Details
 
-### `0/`
+### [0/](../../templates/inverse_barometer/0/)
 *   **`p_rgh`**: At the boundary, configured to represent the varying atmospheric pressure.
 
 ## Verification Criteria
