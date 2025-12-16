@@ -322,3 +322,22 @@ This rotates the hull 180° around the vertical axis and translates it back to t
 *   Guaranteed C2 smoothness for high-quality hydrodynamics.
 *   Explicitly modeled deck and transom for perfect watertight closure.
 *   Pontoon-style hull with flat bottom and bilge radius.
+
+## Release Process
+
+To ensure consistent versioning and avoid regression:
+
+1.  **Check Current Version**:
+    *   `gh release list` (or check GitHub) to see the latest tag (e.g., `v0.3.2`).
+    *   Ensure your working branch is up to date with `main`.
+
+2.  **Bump Version**:
+    *   Update `version = "X.Y.Z"` in `pyproject.toml`.
+    *   `git commit -am "chore: bump version to X.Y.Z"`
+    *   `git push origin main`
+
+3.  **Create Release**:
+    *   Use the `gh` CLI to create the release and tag simultaneously:
+    *   `gh release create vX.Y.Z --title "vX.Y.Z: <Title>" --notes "<Description of changes>"`
+
+**Note**: Do not manually tag with `git tag` unless necessary. Let `gh release create` handle it to ensure the release and tag are synced.
