@@ -61,7 +61,7 @@ To simulate **realistic inland waterways** (rivers/canals):
 
 ## Documentation
 *   [OpenFOAM Case Setup](docs/openfoam_setup.md): Explanation of the simulation template.
-*   [Test Case Templates](templates/base_case/README.md): Detailed documentation of the specific templates.
+*   [Test Case Templates](docs/templates/index.md): Detailed documentation of the specific templates.
 
 ## Running Test Cases
 

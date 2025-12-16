@@ -8,10 +8,10 @@ The templates are organized by increasing physical complexity. This hierarchy al
 
 | Template | Description | Key Physics | Usage |
 | :--- | :--- | :--- | :--- |
-| **[still_water](./still_water)** | Static box of water and air. | Hydrostatic stability, Phase conservation. | Verification of `interFoam` stability and settings. |
-| **[inverse_barometer](./inverse_barometer)** | Static box with pressure gradient. | Pressure-Elevation coupling. | Verifying atmospheric pressure handling. |
-| **[wave_tank](./wave_tank)** | Channel with propagating waves. | Momentum advection, VOF interface capturing. | Verifying wave propagation accuracy. |
-| **[kcs_hull](./kcs_hull)** | Ship hull in open water. | Fluid-Structure Interaction, Turbulence (`kOmegaSST`). | **production** - The main ship resistance simulation. |
+| **[still_water](./still_water.md)** | Static box of water and air. | Hydrostatic stability, Phase conservation. | Verification of `interFoam` stability and settings. |
+| **[inverse_barometer](./inverse_barometer.md)** | Static box with pressure gradient. | Pressure-Elevation coupling. | Verifying atmospheric pressure handling. |
+| **[wave_tank](./wave_tank.md)** | Channel with propagating waves. | Momentum advection, VOF interface capturing. | Verifying wave propagation accuracy. |
+| **[kcs_hull](./kcs_hull.md)** | Ship hull in open water. | Fluid-Structure Interaction, Turbulence (`kOmegaSST`). | **production** - The main ship resistance simulation. |
 
 ## Usage
 

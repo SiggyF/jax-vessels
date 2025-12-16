@@ -13,17 +13,17 @@ This case represents the most complex tier in our test hierarchy: **Fluid-Struct
 
 ### Configuration Details
 
-#### Mesh (`system/snappyHexMeshDict`)
+#### [Mesh](../../templates/floating_hull/system/snappyHexMeshDict) (`system/snappyHexMeshDict`)
 *   **Refinement**: Level 3 on the hull surface.
 *   **Features**: Explicit edge snapping using `surfaceFeatureExtract` (level 3).
 *   **Layers**: Boundary layers are currently **disabled** for robustness in this template, but can be enabled by setting `addLayers` to `true`.
 
-#### Boundary Conditions (`0/`)
+#### [Boundary Conditions](../../templates/floating_hull/0/) (`0/`)
 *   **Hull**: `noSlip` for velocity, `zeroGradient` for pressure.
 *   **Inlet**: Fixed velocity (body-fixed frame implies water moving past ship).
     *   *Note*: The current inlet BC in `0/alpha.water` sets a uniform 0 (air), which creates a non-physical interface at the inlet below the waterline. This manifests as a sharp drop in water surface elevation near x = -100m.
 
-#### Solvers (`system/controlDict`)
+#### [Solvers](../../templates/floating_hull/system/controlDict) (`system/controlDict`)
 *   **PIMPLE**: Configured in PISO mode (`nOuterCorrectors 1`) for speed, assuming small time steps.
 *   **Courant Number**: Max Co = 1.0.
 
