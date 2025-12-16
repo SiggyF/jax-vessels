@@ -1,0 +1,39 @@
+dynamicFvMesh   dynamicMotionSolverFvMesh;
+
+motionSolverLibs ( "libsixDoFRigidBodyMotion.so" );
+solver          sixDoFRigidBodyMotion;
+
+sixDoFRigidBodyMotionCoeffs
+{
+    patches         (hull);
+    innerDistance   5;
+    outerDistance   20;
+
+    mass            2010000;
+    centreOfMass    (67.5 0 2);
+    momentOfInertia (25000000 3000000000 3000000000); 
+
+    report          on;
+    accelerationRelaxation 0.4;
+    accelerationDamping    0.9;
+    
+    solver
+    {
+        type Newmark;
+    }
+
+    constraints
+    {
+        fixedPlane
+        {
+            sixDoFRigidBodyMotionConstraint plane;
+            normal (0 1 0); 
+        }
+
+        fixedAxis
+        {
+            sixDoFRigidBodyMotionConstraint axis;
+            axis (0 1 0); 
+        }
+    }
+}
