@@ -2,7 +2,7 @@ regions
 (
     boxToCell
     {
-        box ( -100 -150 -10 ) ( 400 150 1.40 ); // Water to Equilibrium Z=1.40m
+        box ( -100 -150 -10 ) ( 400 150 1.42 ); // Water to Stable Z=1.42m
         fieldValues
         (
             volScalarFieldValue alpha.water 1
