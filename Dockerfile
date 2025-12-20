@@ -28,7 +28,8 @@ RUN apt-get update && apt-get install -y openfoam2406-default && rm -rf /var/lib
 
 # Source OpenFOAM
 RUN echo "source /usr/local/bin/load-openfoam.sh" >> /etc/bash.bashrc
-ENV BASH_ENV="/usr/local/bin/load-openfoam.sh"
+# Ensure non-interactive shells also source it
+ENV BASH_ENV="/etc/bash.bashrc"
 
 # Copy Scripts (OpenFOAM specific wrappers)
 COPY scripts/run_analysis.sh /usr/local/bin/run-analysis
@@ -42,10 +43,13 @@ RUN chmod +x /usr/local/bin/load-openfoam.sh
 # Keeping standard setup for simulation
 RUN chown -R 1000:1000 /app
 USER 1000:1000
-# ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 CMD ["run-analysis"]
 
 # Stage 3: Python Environment (Analysis)
+# CRITICAL: Keep this stage separate from openfoam.
+# OpenFOAM environment settings (bashrc) are incompatible with Python venvs.
+# Do NOT merge these stages.
 FROM base AS python-env
 WORKDIR /app
 

@@ -161,6 +161,16 @@ This project uses `uv` for dependency management.
 ```bash
 # Install dependencies
 uv sync
+
+# Run Python scripts using uv run
+uv run scripts/script_name.py
+
+# Run OpenFOAM commands (Must be in Docker)
+./scripts/run_docker.sh <command>
+# Example: ./scripts/run_docker.sh foamToVTK
+
+# Run scripts using uv run
+uv run scripts/script_name.py
 ```
 
 ## Hull Generation
@@ -266,6 +276,12 @@ The `examples/hulls/` directory contains generated STL files ready for simulatio
 OpenFOAM v2406 refuses to load shared objects (dynamic libraries) if they were created by the root user, or if the process is running as root in certain contexts.
 - **Symptom**: `Exit code 139` (Segfault) or `cannot open shared object file`.
 - **Solution**: The Dockerfile now defaults to the `ubuntu` user. Ensure all OpenFOAM artifacts are owned by the non-root user.
+
+### 6DoF Instability ("Rocket Launch")
+If the initial water level (`0/include/setFields.still`) creates more buoyancy than the hull's mass, the solver will experience a massive upward force at $t=0$, causing immediate divergence (velocities > $10^{6}$ m/s).
+- **Diagnosis**: Run `scripts/verify_hydrostatics.py` on your hull STL.
+- **Solution**: Adjust the `box` height in `setFields.still` to match the **Equilibrium Draft** ($Z_{eq} \approx Volume / Area$).
+- **Verification**: The included regression test (`verify_hydrostatics.py`) ensures the imbalance is < 10%.
 
 ## Project Structure
 
