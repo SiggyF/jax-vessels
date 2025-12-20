@@ -1,0 +1,97 @@
+direction: right
+
+classes: {
+  host_process: {
+    label: "Host (Python)"
+    style: {
+      fill: "#e6f3ff"
+      stroke: "#0066cc"
+    }
+  }
+  docker_process: {
+    label: "Docker (OpenFOAM)"
+    style: {
+      fill: "#fff0e6"
+      stroke: "#cc3300"
+      stroke-dash: 3
+    }
+  }
+  artifact: {
+    shape: page
+    style: {
+      fill: "#f0f0f0"
+      stroke: "#666666"
+    }
+  }
+}
+
+select_hull: {
+  class: host_process
+  label: "Select Hull"
+  tooltip: "User selects parameterized hull or custom STL"
+}
+
+hull_file: {
+  class: artifact
+  label: "hull.stl"
+}
+
+validate_draft: {
+  class: host_process
+  label: "Calculate Draft & Validate"
+  tooltip: "verify_hydrostatics.py"
+}
+
+draft_params: {
+  class: artifact
+  label: "setFieldsDict Params"
+}
+
+mesh_generation: {
+  class: docker_process
+  label: "blockMesh & snappyHexMesh"
+}
+
+mesh_cache: {
+  class: artifact
+  label: "polyMesh"
+}
+
+simulation: {
+  class: docker_process
+  label: "interFoam (Solver)"
+  tooltip: "Runs in Docker, writes to mounted volume"
+}
+
+logs_fields: {
+  class: artifact
+  label: "Time Directories & Logs"
+}
+
+live_monitor: {
+  class: host_process
+  label: "monitor_floating.py"
+  tooltip: "Reads live logs from host side"
+}
+
+final_report: {
+  class: host_process
+  label: "Generate Report"
+}
+
+# Connections
+select_hull -> hull_file
+hull_file -> validate_draft
+validate_draft -> draft_params
+
+hull_file -> mesh_generation
+mesh_generation -> mesh_cache
+
+mesh_cache -> simulation
+draft_params -> simulation
+
+simulation -> logs_fields
+
+# Parallel monitoring
+logs_fields -> live_monitor
+logs_fields -> final_report
