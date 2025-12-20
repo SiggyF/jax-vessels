@@ -282,6 +282,10 @@ If the initial water level (`0/include/setFields.still`) creates more buoyancy t
 - **Diagnosis**: Run `scripts/verify_hydrostatics.py` on your hull STL.
 - **Solution**: Adjust the `box` height in `setFields.still` to match the **Equilibrium Draft** ($Z_{eq} \approx Volume / Area$).
 - **Verification**: The included regression test (`verify_hydrostatics.py`) ensures the imbalance is < 10%.
+  ```bash
+  uv run scripts/verify_hydrostatics.py verification_run/matrix_6dof_staged
+  ```
+- **Note**: Empirical tests show OpenFOAM often requires ~10cm more draft than calculated analytically due to mesh discretization differences. The script uses a `+0.10m` offset by default.
 
 ## Project Structure
 
