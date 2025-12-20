@@ -1,9 +1,8 @@
 #!/bin/bash
 
 
-# Source OpenFOAM environment
-# Source OpenFOAM environment
-source /usr/local/bin/load-openfoam.sh
+# Source OpenFOAM environment (handled by BASH_ENV -> /etc/bash.bashrc)
+# source /usr/local/bin/load-openfoam.sh
 
 # Execute the provided command
 exec "$@"

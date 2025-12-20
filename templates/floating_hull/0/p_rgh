@@ -28,8 +28,7 @@ boundaryField
 
     outlet
     {
-        type            fixedValue;
-        value           uniform 0;
+        #include "include/outlet_p_rgh_fixed"
     }
 
     bottom

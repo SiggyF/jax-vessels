@@ -1,0 +1,2 @@
+        type            prghTotalPressure;
+        p0              uniform 0;
