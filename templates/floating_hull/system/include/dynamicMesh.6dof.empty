@@ -13,13 +13,12 @@ sixDoFRigidBodyMotionCoeffs
     centreOfMass    (67.5 0 2);
     momentOfInertia (25000000 3000000000 3000000000); 
 
-    report          on;
-    accelerationRelaxation 0.4;
-    accelerationDamping    0.9;
+    accelerationRelaxation 0.05;
+    accelerationDamping    0.8;
     
     solver
     {
-        type Newmark;
+        type symplectic;
     }
 
     constraints

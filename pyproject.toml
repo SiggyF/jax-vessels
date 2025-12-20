@@ -19,6 +19,7 @@ dependencies = [
     "pandas",
     "meshmagick @ git+https://github.com/LHEEA/meshmagick",
     "cmcrameri>=1.9",
+    "tensorboard>=2.20.0",
 ]
 
 [project.scripts]

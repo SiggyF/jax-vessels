@@ -1,0 +1,8 @@
+sixDoF
+{
+    type            sixDoFRigidBodyState;
+    libs            ("libsixDoFRigidBodyState.so");
+    fileControl     timeStep;
+    writeControl    timeStep;
+    writeInterval   1;
+}
