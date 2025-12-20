@@ -121,7 +121,7 @@ def monitor(case_dir: Path, output: Path = None):
     global CASE_DIR, fig, ax, line_heave, line_pitch
     CASE_DIR = case_dir
     
-    fig, ax = plt.subplots(2, 1, figsize=(10, 8))
+    fig, ax = plt.subplots(3, 1, figsize=(10, 12), sharex=True)
     
     # Heave
     line_heave, = ax[0].plot([], [], 'b-', label='Heave (Z)')
@@ -140,9 +140,31 @@ def monitor(case_dir: Path, output: Path = None):
     # Pitch
     line_pitch, = ax[1].plot([], [], 'r-', label='Pitch (deg)')
     ax[1].set_ylabel('Pitch [deg]')
-    ax[1].set_xlabel('Time [s] / Step') # ambiguous units
     ax[1].grid(True)
     ax[1].legend()
+
+    # Draft (Derived)
+    # Draft = WaterLevel(1.42) - Keel_Z
+    # Keel_Z = CoM_Z - 2.0 (Approx)
+    # Draft = 1.42 - (z - 2.0) = 3.42 - z
+    # In future, read WaterLevel from args
+    
+    # Parse data for Draft plot
+    log_file = CASE_DIR / "log.interFoam"
+    times_d, heaves_d, _ = parse_log_file(log_file)
+    
+    if len(heaves_d) > 0:
+        drafts = [3.42 - z for z in heaves_d]
+        ax[2].plot(times_d, drafts, 'g-', label='Draft (m)')
+        ax[2].set_ylabel('Draft [m]')
+        ax[2].set_ylim(1.0, 1.6) # Focus around 1.30
+        ax[2].axhline(y=1.30, color='k', linestyle='--', alpha=0.5, label='Target (1.30)')
+        ax[2].legend()
+    else:
+        logger.warning("No data for Draft plot")
+
+    ax[2].set_xlabel('Time [s]')
+    ax[2].grid(True)
 
     if output:
         # Static plot for non-interactive mode
