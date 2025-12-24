@@ -70,7 +70,7 @@ rule verify_hull:
     output:
         report=str(BUILD_DIR / "{hull}" / "check_report.json")
     shell:
-        "uv run python scripts/verify_hull.py --hull {input.hull} --profile {input.profile} --output {output.report}"
+        "uv run python scripts/core/verify_hull.py --hull {input.hull} --profile {input.profile} --output {output.report}"
 
 # -----------------------------------------------------------------------------
 # Meshing (OpenFOAM)
@@ -103,9 +103,9 @@ rule mesh_hull:
         cp {BUILD_DIR}/{wildcards.hull}/system/include/setFields.still {BUILD_DIR}/{wildcards.hull}/system/include/setFields_active
         
         # 2. Run Mesh Generation (OpenFOAM Container)
-        ./scripts/run_openfoam_docker.sh blockMesh -case {BUILD_DIR}/{wildcards.hull}
-        ./scripts/run_openfoam_docker.sh surfaceFeatureExtract -case {BUILD_DIR}/{wildcards.hull}
-        ./scripts/run_openfoam_docker.sh snappyHexMesh -overwrite -case {BUILD_DIR}/{wildcards.hull}
+        ./scripts/utils/run_openfoam_docker.sh blockMesh -case {BUILD_DIR}/{wildcards.hull}
+        ./scripts/utils/run_openfoam_docker.sh surfaceFeatureExtract -case {BUILD_DIR}/{wildcards.hull}
+        ./scripts/utils/run_openfoam_docker.sh snappyHexMesh -overwrite -case {BUILD_DIR}/{wildcards.hull}
         """
 
 # -----------------------------------------------------------------------------
@@ -140,11 +140,11 @@ rule run_simulation:
         cp $CASE_DIR/system/include/{params.sf_file} $CASE_DIR/system/include/setFields_active
 
         # Patch Dynamic Mesh with Hull Properties (CoM, Mass)
-        uv run python scripts/configure_case.py --report {input.check} --dict $CASE_DIR/constant/dynamicMeshDict
-        uv run python scripts/configure_case.py --report {input.check} --dict $CASE_DIR/0/pointDisplacement
+        uv run python scripts/core/configure_case.py --report {input.check} --dict $CASE_DIR/constant/dynamicMeshDict
+        uv run python scripts/core/configure_case.py --report {input.check} --dict $CASE_DIR/0/pointDisplacement
 
         # 1. Start Monitoring (Python Container/Local)
-        uv run python scripts/monitor_floating.py $CASE_DIR --output {output.plot} --auto-exit &
+        uv run python scripts/core/monitor_floating.py $CASE_DIR --output {output.plot} --auto-exit &
         MONITOR_PID=$!
         trap "kill $MONITOR_PID" EXIT
         
@@ -152,8 +152,10 @@ rule run_simulation:
         
         # 2. Run Simulation (OpenFOAM Container)
         # CRITICAL: Keep this stage separate from openfoam.
-        ./scripts/run_openfoam_docker.sh setFields -case $CASE_DIR
-        ./scripts/run_openfoam_docker.sh interFoam -case $CASE_DIR > {output.log}
+        # 2. Run Simulation (OpenFOAM Container)
+        # CRITICAL: Keep this stage separate from openfoam.
+        ./scripts/utils/run_openfoam_docker.sh setFields -case $CASE_DIR
+        ./scripts/utils/run_openfoam_docker.sh interFoam -case $CASE_DIR > {output.log}
         
         # 3. Stop Monitoring
         kill $MONITOR_PID || true
@@ -172,8 +174,9 @@ rule verify_run:
         """
         # Run verification script
         # case_dir is parent of log file
+        # case_dir is parent of log file
         CASE_DIR={BUILD_DIR}/{wildcards.hull}_{wildcards.wave}_{wildcards.motion}_{wildcards.load}
-        uv run python scripts/verify_simulation_run.py $CASE_DIR
+        uv run python scripts/core/verify_simulation_run.py $CASE_DIR
         touch {output.marker}
         """
 
