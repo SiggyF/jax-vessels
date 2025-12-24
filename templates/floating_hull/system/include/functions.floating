@@ -67,11 +67,4 @@ functions
         fields          (U); 
     }
 
-    sixDoFState
-    {
-        type            sixDoFRigidBodyMotionState;
-        libs            ("libsixDoFRigidBodyMotion.so");
-        outputControl   timeStep;
-        outputInterval  1;
-    }
 }

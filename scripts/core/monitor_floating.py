@@ -17,61 +17,88 @@ import re
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-def parse_sixdof_dat(case_dir: Path):
+def parse_log_file(case_dir: Path):
     """
-    Parses sixDoFRigidBodyMotionState data.
-    Returns times, positions (list of [x,y,z]), rotations (list of 9-tuples or 3x3 matrices).
+    Parses log.interFoam for 6DoF motion data (fallback if postProcessing is missing).
+    Extracts: Time, Centre of mass (Z component for heave).
     """
-    sixdof_dir = case_dir / "postProcessing/sixDoFState"
+    log_path = case_dir / "log.interFoam"
     times = []
-    positions = []
-    rotations = [] 
-
-    if not sixdof_dir.exists():
-        return times, positions, rotations
-
-    dat_files = sorted(sixdof_dir.glob("**/sixDoFState.dat"))
+    heaves = []
     
-    data_map = {} # time -> (pos, rot)
+    if not log_path.exists():
+        return [], [], [] # format match
 
-    for dat_file in dat_files:
-        try:
-            with open(dat_file, 'r') as f:
-                for line in f:
-                    if line.strip().startswith("#"):
-                        continue
-                    # format: Time (x y z) (q0 q1 q2 ... q8)
-                    # Example: 0.01 (0 0 1.2) (1 0 0 0 1 0 0 0 1)
-                    
-                    # Clean brackets
-                    clean_line = line.replace('(', ' ').replace(')', ' ')
-                    parts = clean_line.split()
-                    if len(parts) < 13: # Time + 3 pos + 9 rot = 13 components min
-                        continue
-                        
-                    t = float(parts[0])
-                    # Position: parts[1:4]
-                    x, y, z = float(parts[1]), float(parts[2]), float(parts[3])
-                    pos = [x, y, z]
-                    
-                    # Rotation: parts[4:13] (9 components)
-                    rot = [float(p) for p in parts[4:13]] # Flattened 3x3
-                    
-                    data_map[t] = (pos, rot)
-        except Exception as e:
-            logger.warning(f"Failed to parse {dat_file}: {e}")
-
-    sorted_times = sorted(data_map.keys())
-    times = sorted_times
-    positions = [data_map[t][0] for t in times]
-    rotations = [data_map[t][1] for t in times]
+    current_time = None
     
-    return times, positions, rotations
+    # Simple state machine parser
+    # Time = 0.5
+    # ...
+    # Centre of mass: (x y z)
+    
+    try:
+        with open(log_path, 'r') as f:
+            for line in f:
+                if line.startswith("Time ="):
+                    try:
+                        current_time = float(line.split("=")[1].strip())
+                    except:
+                        pass
+                
+                if "Centre of mass:" in line and current_time is not None:
+                    # Centre of mass: (3.18086e-05 0 -1.61063)
+                    try:
+                        # Clean brackets
+                        clean = line.split(":")[1].strip().replace('(', '').replace(')', '')
+                        parts = clean.split()
+                        if len(parts) == 3:
+                            z = float(parts[2])
+                            times.append(current_time)
+                            heaves.append(z)
+                    except:
+                        pass
+    except Exception as e:
+        logger.warning(f"Error parsing log file: {e}")
+        
+    # Return dummy rotations for now as we focus on Heave
+    return times, [[0,0,h] for h in heaves], rotations
+
+def save_csv(case_dir: Path, times, positions, rotations):
+    """Saves parsed 6DoF data to CSV."""
+    import csv
+    import math
+    
+    csv_path = case_dir / "6dof.csv"
+    
+    # Do not append, write fresh every time to avoid duplicates or use append if careful.
+    # Since we parse the whole log every time (inefficient but simple), we overwrite.
+    
+    with open(csv_path, 'w', newline='') as f:
+        writer = csv.writer(f)
+        writer.writerow(["Time", "CoM_X", "CoM_Y", "CoM_Z", "Pitch_deg", "Roll_deg", "Yaw_deg"])
+        
+        for i, t in enumerate(times):
+            pos = positions[i]
+            rot = rotations[i]
+            
+            # Extract basic orientation
+            # Assuming rot is flattened row-major 3x3
+            # Pitch = -asin(R[6])
+            try:
+                pitch = math.degrees(math.asin(max(-1.0, min(1.0, -rot[6])))) if hasattr(rot, '__getitem__') and len(rot) > 6 else 0.0
+            except:
+                pitch = 0.0
+            
+            writer.writerow([t, pos[0], pos[1], pos[2], pitch, 0.0, 0.0])
 
 def update(frame, case_dir, output, auto_exit):
     log_file = case_dir / "log.interFoam"
     
     times, positions, rotations = parse_sixdof_dat(case_dir)
+    
+    # Save to CSV
+    if times:
+        save_csv(case_dir, times, positions, rotations)
     
     heaves = [p[2] for p in positions]
     # Simple pitch approx: -asin(R[6]) ? (Element 3,1 in 1-based, index 6 in 0-based row-major 0,1,2, 3,4,5, 6,7,8)
@@ -90,9 +117,12 @@ def update(frame, case_dir, output, auto_exit):
     pitches = []
     for r in rotations:
          # Clamp for asin domain
-         val = -r[6]
-         val = max(-1.0, min(1.0, val))
-         pitches.append(math.degrees(math.asin(val)))
+         if hasattr(r, '__getitem__') and len(r) > 6:
+             val = -r[6]
+             val = max(-1.0, min(1.0, val))
+             pitches.append(math.degrees(math.asin(val)))
+         else:
+             pitches.append(0.0)
 
     if not times:
         if not log_file.exists():
@@ -113,7 +143,6 @@ def update(frame, case_dir, output, auto_exit):
         plt.savefig(output)
 
     return line_heave, line_pitch
-
 
 def monitor(case_dir: Path, output: Path = None, auto_exit: bool = False):
     """
