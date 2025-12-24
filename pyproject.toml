@@ -1,6 +1,6 @@
 [project]
 name = "ship-model"
-version = "0.3.3"
+dynamic = ["version"]
 description = "Ship model visualization and simulation tools"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -31,8 +31,11 @@ dependencies = [
 openfoam-run = "openfoam_runner.cli:main"
 
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling", "hatch-vcs"]
 build-backend = "hatchling.build"
+
+[tool.hatch.version]
+source = "vcs"
 
 [tool.hatch.metadata]
 allow-direct-references = true
