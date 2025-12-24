@@ -174,14 +174,13 @@ rule verify_run:
     input:
         log=str(BUILD_DIR / "{hull}_{wave}_{motion}_{load}" / "log.interFoam")
     output:
+        report=str(BUILD_DIR / "{hull}_{wave}_{motion}_{load}" / "verification_report.json"),
         marker=str(BUILD_DIR / "{hull}_{wave}_{motion}_{load}" / "verification_passed")
     shell:
         """
         # Run verification script
-        # case_dir is parent of log file
-        # case_dir is parent of log file
         CASE_DIR={BUILD_DIR}/{wildcards.hull}_{wildcards.wave}_{wildcards.motion}_{wildcards.load}
-        uv run python scripts/core/verify_simulation_run.py $CASE_DIR
+        uv run python scripts/core/verify_simulation_run.py $CASE_DIR --output {output.report}
         touch {output.marker}
         """
 
@@ -189,15 +188,19 @@ rule post_process:
     input:
         log=str(BUILD_DIR / "{hull}_{wave}_{motion}_{load}" / "log.interFoam"),
         plot=str(BUILD_DIR / "{hull}_{wave}_{motion}_{load}" / "monitor_plot.png"),
-        verification=str(BUILD_DIR / "{hull}_{wave}_{motion}_{load}" / "verification_passed")
+        verification=str(BUILD_DIR / "{hull}_{wave}_{motion}_{load}" / "verification_passed"),
+        report=str(BUILD_DIR / "{hull}_{wave}_{motion}_{load}" / "verification_report.json")
     output:
         str(BUILD_DIR / "{hull}_{wave}_{motion}_{load}" / "report.html")
     shell:
         """
-        echo "<html><body><h1>Report for {wildcards.hull} ({wildcards.wave}, {wildcards.motion}, {wildcards.load})</h1>" > {output}
-        echo "<p>Verification Passed.</p>" >> {output}
-        echo "<img src='monitor_plot.png'/>" >> {output}
-        echo "<pre>" >> {output}
-        tail -n 50 {input.log} >> {output}
-        echo "</pre></body></html>" >> {output}
+        uv run python scripts/utils/generate_report.py \
+            --json {input.report} \
+            --log {input.log} \
+            --plot {input.plot} \
+            --output {output} \
+            --hull {wildcards.hull} \
+            --wave {wildcards.wave} \
+            --motion {wildcards.motion} \
+            --load {wildcards.load}
         """
