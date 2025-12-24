@@ -88,15 +88,35 @@ This workflow ensures:
 
 The `templates/` directory contains standard OpenFOAM cases.
 
-### Automated Execution (Recommended)
-We provide a helper script to run standard verification cases inside the Docker container automatically, handling parallel execution and setup.
+### Automated Execution (Snakemake) - Recommended
 
+We use [Snakemake](https://snakemake.readthedocs.io) to manage the entire simulation workflow, from hull generation to report creation.
+
+1.  **Configure**: Edit `config.yaml` to select the hull, wave conditions, and load case.
+    ```yaml
+    cases:
+      - hull: "wigley"
+        wave: "still"
+        motion: "floating"
+        load: "empty"
+    ```
+
+2.  **Run Workflow**:
+    ```bash
+    # Run the full workflow (requires Docker)
+    uv run snakemake -c 6
+    ```
+
+3.  **View Results**:
+    Open `build/wigley/report.html` (or your specific case) to see the summary and monitoring plots.
+
+#### Visualizing the Workflow
+To see the DAG of the current configuration:
 ```bash
-# Run the KCS Hull verification case (runs in parallel on 6 cores)
-./scripts/run_docker.sh ./scripts/verify_case.sh kcs_hull
+uv run snakemake --dag | dot -Tpng > dag.png
 ```
 
-### Manual Execution
+### Manual Execution (Debugging)
 To run a test case manually (e.g., `kcs_hull`):
 
 1.  **Copy the template** to a run directory to keep the original clean:
