@@ -30,34 +30,29 @@ rule generate_profile:
     output:
         profile=str(BUILD_DIR / "{hull}" / "profile.json")
     shell:
-        "uv run python scripts/generators/generate_profile.py --config {input.config} --hull {wildcards.hull} --output {output.profile}"
+        "uv run python scripts/utils/dump_profile.py --config {input.config} --hull {wildcards.hull} --output {output.profile}"
 
-rule generate_bow:
-    input:
-        profile=str(BUILD_DIR / "{hull}" / "profile.json")
+# Specialized rule for Wigley hull (monolithic generation)
+rule generate_wigley_hull:
     output:
-        bow=str(BUILD_DIR / "{hull}" / "components" / "bow.stl")
+        hull=str(BUILD_DIR / "wigley" / "hull.stl")
+    params:
+        blender=config["blender_path"]
     shell:
-        "uv run python scripts/generators/generate_bow.py --input {input.profile} --output {output.bow}"
+        "{params.blender} -b -P scripts/generators/blender_operations.py -- --task wigley --output {output.hull}"
 
-rule generate_thruster:
-    # Generates thruster (engine + propellor)
+# Generic assembly (fallback for other hulls - TBD)
+rule assemble_hull_generic:
     input:
         config="config.yaml"
     output:
-        thruster=str(BUILD_DIR / "{hull}" / "components" / "thruster_assembly.stl")
-    shell:
-        "uv run python scripts/generators/generate_thruster.py --config {input.config} --hull {wildcards.hull} --output {output.thruster}"
-
-rule assemble_hull:
-    input:
-        bow=str(BUILD_DIR / "{hull}" / "components" / "bow.stl"),
-        thruster=str(BUILD_DIR / "{hull}" / "components" / "thruster_assembly.stl"),
-        profile=str(BUILD_DIR / "{hull}" / "profile.json")
-    output:
         hull=str(BUILD_DIR / "{hull}" / "hull.stl")
+    wildcard_constraints:
+        hull="((?!wigley).)*" # Matches anything EXCEPT wigley
+    params:
+        blender=config["blender_path"]
     shell:
-        "uv run python scripts/generators/assemble_hull.py --bow {input.bow} --thruster {input.thruster} --profile {input.profile} --output {output.hull}"
+        "{params.blender} -b -P scripts/generators/blender_operations.py -- --task assemble --output {output.hull}" # Placeholder arguments
 
 # -----------------------------------------------------------------------------
 # Pre-checks & Setup
@@ -154,8 +149,18 @@ rule run_simulation:
         # CRITICAL: Keep this stage separate from openfoam.
         # 2. Run Simulation (OpenFOAM Container)
         # CRITICAL: Keep this stage separate from openfoam.
+        # 2. Run Simulation (OpenFOAM Container - Parallel)
+        
+        # Decompose
         ./scripts/utils/run_openfoam_docker.sh setFields -case $CASE_DIR
-        ./scripts/utils/run_openfoam_docker.sh interFoam -case $CASE_DIR > {output.log}
+        ./scripts/utils/run_openfoam_docker.sh decomposePar -case $CASE_DIR -force
+        
+        # Run Parallel Solver
+        ./scripts/utils/run_openfoam_docker.sh mpirun -np 6 interFoam -parallel -case $CASE_DIR > {output.log}
+        
+        # Reconstruct (Optional during run, but good for post-processing)
+        # We might do this after? No, keeping it simple.
+        # ./scripts/utils/run_openfoam_docker.sh reconstructPar -case $CASE_DIR
         
         # 3. Stop Monitoring
         kill $MONITOR_PID || true

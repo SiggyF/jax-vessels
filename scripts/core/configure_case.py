@@ -16,11 +16,10 @@ def main():
     com = data['hydrostatics']['center_of_mass']
     volume = data['hydrostatics']['volume']
     
-    # Simple Mass Estimation (Half loaded? Density of water?)
-    # For a stable float, Mass = Displacement.
-    # If we assume 50% draft, Mass = Volume * 0.5 * 1025.
-    # Let's use a conservative estimate: 50% submergence.
-    mass = abs(volume) * 0.5 * 1025.0
+    # Volume in report is now the DISPLACED VOLUME at Z=0.
+    # To float at Z=0, Mass = Displaced Volume * Density.
+    # We assume standard seawater density 1025 kg/m3.
+    mass = abs(volume) * 1025.0
 
     print(f"Configuring Case:")
     print(f"  CoM: {com}")

@@ -16,6 +16,9 @@ sixDoFRigidBodyMotionCoeffs
     accelerationRelaxation 0.05;
     accelerationDamping    0.8;
     
+    report          on;
+    reportToFile    on;
+
     solver
     {
         type symplectic;

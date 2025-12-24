@@ -141,11 +141,17 @@ To run a test case manually (e.g., `kcs_hull`):
         ```
     *   **Parallel (Faster)**:
         The case is configured for 6 cores (`system/decomposeParDict`).
-        ```bash
-        decomposePar
         mpirun -np 6 interFoam -parallel
         reconstructPar
         ```
+
+### Stopping a Run
+If you need to abort a running simulation, use the provided helper script which safely terminates Snakemake, Python monitors, and Docker containers:
+
+```bash
+./scripts/utils/stop_simulation.sh
+```
+
       ## Model Philosophy and Verification
 
 ### Verification Matrix
