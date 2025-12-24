@@ -1,0 +1,195 @@
+import os
+from pathlib import Path
+
+configfile: "config.yaml"
+
+BUILD_DIR = Path(config["build_dir"])
+
+# Helper functions
+def get_hull_target(hull):
+    return f"build/{hull}/report.html"
+
+# Targets
+ALL_CASES = []
+if "cases" in config:
+    for case in config["cases"]:
+        case_name = f"{case['hull']}_{case['wave']}_{case['motion']}_{case['load']}"
+        ALL_CASES.append(str(BUILD_DIR / case_name / "report.html"))
+
+rule all:
+    input:
+        ALL_CASES
+
+# -----------------------------------------------------------------------------
+# Component Generation
+# -----------------------------------------------------------------------------
+
+rule generate_profile:
+    input:
+        config="config.yaml"
+    output:
+        profile=str(BUILD_DIR / "{hull}" / "profile.json")
+    shell:
+        "uv run python scripts/generators/generate_profile.py --config {input.config} --hull {wildcards.hull} --output {output.profile}"
+
+rule generate_bow:
+    input:
+        profile=str(BUILD_DIR / "{hull}" / "profile.json")
+    output:
+        bow=str(BUILD_DIR / "{hull}" / "components" / "bow.stl")
+    shell:
+        "uv run python scripts/generators/generate_bow.py --input {input.profile} --output {output.bow}"
+
+rule generate_thruster:
+    # Generates thruster (engine + propellor)
+    input:
+        config="config.yaml"
+    output:
+        thruster=str(BUILD_DIR / "{hull}" / "components" / "thruster_assembly.stl")
+    shell:
+        "uv run python scripts/generators/generate_thruster.py --config {input.config} --hull {wildcards.hull} --output {output.thruster}"
+
+rule assemble_hull:
+    input:
+        bow=str(BUILD_DIR / "{hull}" / "components" / "bow.stl"),
+        thruster=str(BUILD_DIR / "{hull}" / "components" / "thruster_assembly.stl"),
+        profile=str(BUILD_DIR / "{hull}" / "profile.json")
+    output:
+        hull=str(BUILD_DIR / "{hull}" / "hull.stl")
+    shell:
+        "uv run python scripts/generators/assemble_hull.py --bow {input.bow} --thruster {input.thruster} --profile {input.profile} --output {output.hull}"
+
+# -----------------------------------------------------------------------------
+# Pre-checks & Setup
+# -----------------------------------------------------------------------------
+
+rule verify_hull:
+    input:
+        hull=str(BUILD_DIR / "{hull}" / "hull.stl"),
+        profile=str(BUILD_DIR / "{hull}" / "profile.json")
+    output:
+        report=str(BUILD_DIR / "{hull}" / "check_report.json")
+    shell:
+        "uv run python scripts/verify_hull.py --hull {input.hull} --profile {input.profile} --output {output.report}"
+
+# -----------------------------------------------------------------------------
+# Meshing (OpenFOAM)
+# -----------------------------------------------------------------------------
+# Using a dummy output directory marker to handle the directory output
+rule mesh_hull:
+    input:
+        hull=str(BUILD_DIR / "{hull}" / "hull.stl"),
+        check=str(BUILD_DIR / "{hull}" / "check_report.json")
+    output:
+        directory(str(BUILD_DIR / "{hull}" / "constant" / "polyMesh"))
+    threads: 4
+    params:
+        template="templates/floating_hull"
+    shell:
+        """
+        # Ensure we use the docker container logic
+        # CRITICAL: Keep this stage separate from openfoam.
+        # OpenFOAM environment settings (bashrc) are incompatible with Python venvs.
+        # Do NOT merge these stages.
+        
+        # 1. Prepare Case Directory from Template
+        mkdir -p {BUILD_DIR}/{wildcards.hull}
+        cp -r {params.template}/* {BUILD_DIR}/{wildcards.hull}/
+        cp {input.hull} {BUILD_DIR}/{wildcards.hull}/constant/triSurface/hull.stl
+        
+        # Configure Default Includes for Meshing (Static)
+        cp {BUILD_DIR}/{wildcards.hull}/system/include/functions.static {BUILD_DIR}/{wildcards.hull}/system/include/functions_active
+        cp {BUILD_DIR}/{wildcards.hull}/system/include/dynamicMesh.static {BUILD_DIR}/{wildcards.hull}/system/include/dynamicMesh_active
+        cp {BUILD_DIR}/{wildcards.hull}/system/include/setFields.still {BUILD_DIR}/{wildcards.hull}/system/include/setFields_active
+        
+        # 2. Run Mesh Generation (OpenFOAM Container)
+        ./scripts/run_openfoam_docker.sh blockMesh -case {BUILD_DIR}/{wildcards.hull}
+        ./scripts/run_openfoam_docker.sh surfaceFeatureExtract -case {BUILD_DIR}/{wildcards.hull}
+        ./scripts/run_openfoam_docker.sh snappyHexMesh -overwrite -case {BUILD_DIR}/{wildcards.hull}
+        """
+
+# -----------------------------------------------------------------------------
+# Simulation (OpenFOAM + Monitoring)
+# -----------------------------------------------------------------------------
+
+rule run_simulation:
+    input:
+        # We link the hull's mesh to the simulation case
+        mesh=str(BUILD_DIR / "{hull}" / "constant" / "polyMesh"),
+        check=str(BUILD_DIR / "{hull}" / "check_report.json")
+    output:
+        log=str(BUILD_DIR / "{hull}_{wave}_{motion}_{load}" / "log.interFoam"),
+        plot=str(BUILD_DIR / "{hull}_{wave}_{motion}_{load}" / "monitor_plot.png")
+    threads: 6
+    params:
+        hull_dir=str(BUILD_DIR / "{hull}"),
+        func_file=lambda w: f"functions.{w.motion}",
+        mesh_file=lambda w: "dynamicMesh.static" if w.motion == "static" else f"dynamicMesh.{w.motion}.{w.load}",
+        sf_file=lambda w: "setFields.still" if w.wave == "still" else "setFields.waves"
+    shell:
+        """
+        CASE_DIR={BUILD_DIR}/{wildcards.hull}_{wildcards.wave}_{wildcards.motion}_{wildcards.load}
+        mkdir -p $CASE_DIR
+        
+        # Copy Mesh from Hull directory
+        cp -r {params.hull_dir}/* $CASE_DIR/
+        
+        # Configure Simulation Includes based on Parameters
+        cp $CASE_DIR/system/include/{params.func_file} $CASE_DIR/system/include/functions_active
+        cp $CASE_DIR/system/include/{params.mesh_file} $CASE_DIR/constant/dynamicMeshDict
+        cp $CASE_DIR/system/include/{params.sf_file} $CASE_DIR/system/include/setFields_active
+
+        # Patch Dynamic Mesh with Hull Properties (CoM, Mass)
+        uv run python scripts/configure_case.py --report {input.check} --dict $CASE_DIR/constant/dynamicMeshDict
+        uv run python scripts/configure_case.py --report {input.check} --dict $CASE_DIR/0/pointDisplacement
+
+        # 1. Start Monitoring (Python Container/Local)
+        uv run python scripts/monitor_floating.py $CASE_DIR --output {output.plot} --auto-exit &
+        MONITOR_PID=$!
+        trap "kill $MONITOR_PID" EXIT
+        
+        # 2. Run Simulation (OpenFOAM Container)
+        
+        # 2. Run Simulation (OpenFOAM Container)
+        # CRITICAL: Keep this stage separate from openfoam.
+        ./scripts/run_openfoam_docker.sh setFields -case $CASE_DIR
+        ./scripts/run_openfoam_docker.sh interFoam -case $CASE_DIR > {output.log}
+        
+        # 3. Stop Monitoring
+        kill $MONITOR_PID || true
+        """
+
+# -----------------------------------------------------------------------------
+# Post-processing
+# -----------------------------------------------------------------------------
+
+rule verify_run:
+    input:
+        log=str(BUILD_DIR / "{hull}_{wave}_{motion}_{load}" / "log.interFoam")
+    output:
+        marker=str(BUILD_DIR / "{hull}_{wave}_{motion}_{load}" / "verification_passed")
+    shell:
+        """
+        # Run verification script
+        # case_dir is parent of log file
+        CASE_DIR={BUILD_DIR}/{wildcards.hull}_{wildcards.wave}_{wildcards.motion}_{wildcards.load}
+        uv run python scripts/verify_simulation_run.py $CASE_DIR
+        touch {output.marker}
+        """
+
+rule post_process:
+    input:
+        log=str(BUILD_DIR / "{hull}_{wave}_{motion}_{load}" / "log.interFoam"),
+        plot=str(BUILD_DIR / "{hull}_{wave}_{motion}_{load}" / "monitor_plot.png"),
+        verification=str(BUILD_DIR / "{hull}_{wave}_{motion}_{load}" / "verification_passed")
+    output:
+        str(BUILD_DIR / "{hull}_{wave}_{motion}_{load}" / "report.html")
+    shell:
+        """
+        echo "<html><body><h1>Report for {wildcards.hull} ({wildcards.wave}, {wildcards.motion}, {wildcards.load})</h1>" > {output}
+        echo "<p>Verification Passed.</p>" >> {output}
+        echo "<img src='monitor_plot.png'/>" >> {output}
+        echo "<pre>" >> {output}
+        tail -n 50 {input.log} >> {output}
+        echo "</pre></body></html>" >> {output}
+        """

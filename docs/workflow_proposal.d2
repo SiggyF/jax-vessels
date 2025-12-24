@@ -1,0 +1,163 @@
+direction: right
+
+classes: {
+  host_process: {
+    label: "Host (Python/Snakemake)"
+    style: {
+      fill: "#e6f3ff"
+      stroke: "#0066cc"
+    }
+  }
+  docker_process: {
+    label: "Docker (OpenFOAM)"
+    style: {
+      fill: "#fff0e6"
+      stroke: "#cc3300"
+      stroke-dash: 3
+    }
+  }
+  artifact: {
+    shape: page
+    style: {
+      fill: "#f0f0f0"
+      stroke: "#666666"
+    }
+  }
+}
+
+# -------------------------------------------------------------
+# 1. Component Generation
+# -------------------------------------------------------------
+config: {
+  class: artifact
+  label: "config.yaml"
+}
+
+gen_profile: {
+  class: host_process
+  label: "generate_profile.py"
+}
+
+profile_json: {
+  class: artifact
+  label: "profile.json"
+}
+
+gen_bow: {
+  class: host_process
+  label: "generate_bow.py"
+}
+
+bow_stl: {
+  class: artifact
+  label: "bow.stl"
+}
+
+gen_engine: {
+  class: host_process
+  label: "generate_engine.py"
+  tooltip: "Includes Propellor/Thruster"
+}
+
+engine_stl: {
+  class: artifact
+  label: "engine_assembly.stl"
+}
+
+assemble: {
+  class: host_process
+  label: "assemble_hull.py"
+}
+
+full_hull: {
+  class: artifact
+  label: "hull.stl"
+}
+
+# -------------------------------------------------------------
+# 2. Verification
+# -------------------------------------------------------------
+
+verify: {
+  class: host_process
+  label: "verify_hull.py"
+  tooltip: "Checks integrity and hydrostatics"
+}
+
+check_report: {
+  class: artifact
+  label: "check_report.json"
+}
+
+# -------------------------------------------------------------
+# 3. Meshing
+# -------------------------------------------------------------
+
+mesh_gen: {
+  class: docker_process
+  label: "Mesh Generation"
+  tooltip: "blockMesh, surfaceFeatureExtract, snappyHexMesh"
+}
+
+polyMesh: {
+  class: artifact
+  label: "polyMesh"
+}
+
+# -------------------------------------------------------------
+# 4. Simulation & Monitoring (Parallel)
+# -------------------------------------------------------------
+
+simulation: {
+  class: docker_process
+  label: "interFoam"
+}
+
+monitor: {
+  class: host_process
+  label: "monitor_floating.py"
+  tooltip: "Runs in parallel with simulation"
+}
+
+logs: {
+  class: artifact
+  label: "log.interFoam"
+}
+
+report: {
+  class: artifact
+  label: "report.html"
+}
+
+# -------------------------------------------------------------
+# Flow Connections
+# -------------------------------------------------------------
+
+config -> gen_profile
+gen_profile -> profile_json
+
+profile_json -> gen_bow
+gen_bow -> bow_stl
+
+config -> gen_engine
+gen_engine -> engine_stl
+
+profile_json -> assemble
+bow_stl -> assemble
+engine_stl -> assemble
+
+assemble -> full_hull
+
+full_hull -> verify
+verify -> check_report
+
+full_hull -> mesh_gen
+mesh_gen -> polyMesh
+
+polyMesh -> simulation
+check_report -> simulation
+
+simulation -> logs
+logs -> monitor
+logs -> report
+monitor -> report

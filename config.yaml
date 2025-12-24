@@ -1,0 +1,47 @@
+# Configuration for Ship Simulation Workflow
+
+# Output Directory
+build_dir: "build"
+
+# Blender Configuration
+blender_path: "/Applications/Blender.app/Contents/MacOS/Blender"
+
+# Simulation Cases
+cases:
+  - hull: "wigley"
+    wave: "still"
+    motion: "floating"
+    load: "empty"
+
+  # - hull: "barge_simple"
+# ...
+
+# Component Generation Parameters
+hull_specs:
+  wigley:
+    profile: "wigley"
+    # Standard Wigley dimensions (m)
+    length: 100.0
+    width: 10.0
+    draft: 6.25
+    bow_type: "none"
+    engine_type: "none"
+    propellor: "none"
+
+  barge_simple:
+    profile: "rectangular"
+    length: 50.0
+    width: 10.0
+    draft: 2.0
+    bow_type: "barge_front"
+    engine_type: "standard_diesel"
+    propellor: "single_screw"
+
+  container_ship_kcs:
+    profile: "kcs_profile"
+    length: 230.0
+    width: 32.2
+    draft: 10.8
+    bow_type: "bulbous"
+    engine_type: "marine_diesel_massive"
+    propellor: "variable_pitch"

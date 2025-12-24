@@ -20,6 +20,11 @@ dependencies = [
     "meshmagick @ git+https://github.com/LHEEA/meshmagick",
     "cmcrameri>=1.9",
     "tensorboard>=2.20.0",
+    "snakemake",
+    "PyYAML",
+    "trimesh>=4.10.1",
+    "scipy>=1.15.3",
+    "rerun-sdk>=0.28.1",
 ]
 
 [project.scripts]
