@@ -204,11 +204,11 @@ This project uses `uv` for dependency management.
 uv sync
 
 # Run Python scripts using uv run
-uv run scripts/script_name.py
+uv run scripts/core/script_name.py
 
 # Run OpenFOAM commands (Must be in Docker)
-./scripts/run_docker.sh <command>
-# Example: ./scripts/run_docker.sh foamToVTK
+./scripts/utils/run_docker.sh <command>
+# Example: ./scripts/utils/run_docker.sh foamToVTK
 
 # Run scripts using uv run
 uv run scripts/script_name.py
@@ -246,12 +246,12 @@ We provide a tool to quickly check the hydrostatic properties (displacement, cen
 
 ```bash
 # Check hydrostatics for a hull
-./scripts/check_hydrostatics.sh <path_to_stl> [water_density] [vertical_cog]
+./scripts/utils/check_hydrostatics.sh <path_to_stl> [water_density] [vertical_cog]
 ```
 
 Example:
 ```bash
-./scripts/check_hydrostatics.sh templates/kcs_hull/constant/triSurface/hull.stl 1025 0
+./scripts/utils/check_hydrostatics.sh templates/kcs_hull/constant/triSurface/hull.stl 1025 0
 ```
 
 
@@ -260,14 +260,14 @@ We recommend using Docker to ensure a consistent OpenFOAM environment with all d
 
 1.  **Build the Image**:
     ```bash
-    ./scripts/run_docker.sh build
+    ./scripts/utils/run_docker.sh build
     # Or manually: docker build -t jax-vessels .
     ```
 
 2.  **Run a Simulation**:
     Use the provided wrapper to execute commands inside the container with the current directory mounted:
     ```bash
-    ./scripts/run_docker.sh ./scripts/verify_case.sh kcs_hull
+    ./scripts/utils/run_docker.sh ./scripts/legacy/verify_case.sh kcs_hull
     ```
     
     This will:
@@ -324,7 +324,7 @@ If the initial water level (`0/include/setFields.still`) creates more buoyancy t
 - **Solution**: Adjust the `box` height in `setFields.still` to match the **Equilibrium Draft** ($Z_{eq} \approx Volume / Area$).
 - **Verification**: The included regression test (`verify_hydrostatics.py`) ensures the imbalance is < 10%.
   ```bash
-  uv run scripts/verify_hydrostatics.py verification_run/matrix_6dof_staged
+  uv run scripts/utils/verify_hydrostatics.py verification_run/matrix_6dof_staged
   ```
 - **Note**: Empirical tests show OpenFOAM often requires ~10cm more draft than calculated analytically due to mesh discretization differences. The script uses a `+0.10m` offset by default.
 
@@ -358,7 +358,7 @@ To simulate a floating vessel (6DoF) in Head Seas (waves hitting the bow), ensur
 
 To correct this for "Head Seas" (Bow upstream):
 ```bash
-bash scripts/run_docker.sh surfaceTransformPoints \
+bash scripts/utils/run_docker.sh surfaceTransformPoints \
     -yaw 180 \
     -translate '(135 0 0)' \
     examples/vessels/barge_nurbs.stl \

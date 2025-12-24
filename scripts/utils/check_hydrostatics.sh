@@ -3,8 +3,8 @@ set -e
 
 # Usage hint
 if [ -z "$1" ]; then
-    echo "Usage: ./scripts/check_hydrostatics.sh <path_to_stl> [water_density] [zg]"
-    echo "Example: ./scripts/check_hydrostatics.sh templates/kcs_hull/constant/triSurface/hull.stl 1025 0"
+    echo "Usage: ./scripts/utils/check_hydrostatics.sh <path_to_stl> [water_density] [zg]"
+    echo "Example: ./scripts/utils/check_hydrostatics.sh templates/kcs_hull/constant/triSurface/hull.stl 1025 0"
     exit 1
 fi
 
