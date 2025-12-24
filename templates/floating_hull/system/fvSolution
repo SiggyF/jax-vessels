@@ -20,7 +20,7 @@ solvers
     "alpha.water.*"
     {
         nAlphaCorr      1;
-        nAlphaSubCycles 4;
+        nAlphaSubCycles 5;
         cAlpha          1;
 
         MULESCorr       yes;
