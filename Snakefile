@@ -134,6 +134,16 @@ rule run_simulation:
         cp $CASE_DIR/system/include/{params.mesh_file} $CASE_DIR/constant/dynamicMeshDict
         cp $CASE_DIR/system/include/{params.sf_file} $CASE_DIR/system/include/setFields_active
 
+        # Handle Wave Properties (Issue #26)
+        if [ "{wildcards.wave}" == "regular" ]; then
+            # Copy waveProperties
+            cp templates/floating_hull/constant/waveProperties $CASE_DIR/constant/
+            
+            # Revert to wave templates for U and alpha.water
+            cp templates/floating_hull/0/U.waves $CASE_DIR/0/U
+            cp templates/floating_hull/0/alpha.water.waves $CASE_DIR/0/alpha.water
+        fi
+
         # Patch Dynamic Mesh with Hull Properties (CoM, Mass)
         uv run python scripts/core/configure_case.py --report {input.check} --dict $CASE_DIR/constant/dynamicMeshDict
         uv run python scripts/core/configure_case.py --report {input.check} --dict $CASE_DIR/0/pointDisplacement
