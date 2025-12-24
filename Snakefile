@@ -115,7 +115,7 @@ rule run_simulation:
     output:
         log=str(BUILD_DIR / "{hull}_{wave}_{motion}_{load}" / "log.interFoam"),
         plot=str(BUILD_DIR / "{hull}_{wave}_{motion}_{load}" / "monitor_plot.png")
-    threads: 6
+    threads: 8
     params:
         hull_dir=str(BUILD_DIR / "{hull}"),
         func_file=lambda w: f"functions.{w.motion}",
@@ -156,7 +156,8 @@ rule run_simulation:
         ./scripts/utils/run_openfoam_docker.sh decomposePar -case $CASE_DIR -force
         
         # Run Parallel Solver
-        ./scripts/utils/run_openfoam_docker.sh mpirun -np 6 interFoam -parallel -case $CASE_DIR > {output.log}
+        ./scripts/utils/run_openfoam_docker.sh mpirun -np 8 interFoam -parallel -case $CASE_DIR > {output.log}
+
         
         # Reconstruct (Optional during run, but good for post-processing)
         # We might do this after? No, keeping it simple.
