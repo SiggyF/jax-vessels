@@ -29,12 +29,13 @@ def parse_log_file(case_dir: Path):
     if not log_path.exists():
         return [], [], [] # format match
 
-    current_time = None
+    current_orientation = None
     
-    # Simple state machine parser
-    # Time = 0.5
-    # ...
-    # Centre of mass: (x y z)
+    rotations = []
+    positions = []
+    
+    # Regex for Orientation: (1 0 0 0 1 0 0 0 1)
+    # Orientation: (1 0 6.47505e-06 0 1 0 -6.47505e-06 0 1)
     
     try:
         with open(log_path, 'r') as f:
@@ -46,22 +47,45 @@ def parse_log_file(case_dir: Path):
                         pass
                 
                 if "Centre of mass:" in line and current_time is not None:
-                    # Centre of mass: (3.18086e-05 0 -1.61063)
-                    try:
-                        # Clean brackets
-                        clean = line.split(":")[1].strip().replace('(', '').replace(')', '')
-                        parts = clean.split()
-                        if len(parts) == 3:
-                            z = float(parts[2])
-                            times.append(current_time)
-                            heaves.append(z)
-                    except:
-                        pass
+                     # Centre of mass: (3.18086e-05 0 -1.61063)
+                     try:
+                         clean = line.split(":")[1].strip().replace('(', '').replace(')', '')
+                         parts = clean.split()
+                         if len(parts) == 3:
+                             x, y, z = float(parts[0]), float(parts[1]), float(parts[2])
+                             # We only append when we have a full state, but log might split lines?
+                             # Usually CoM comes first, then Orientation.
+                             # Let's store temporarily
+                             current_pos = [x, y, z]
+                     except:
+                         pass
+
+                if "Orientation:" in line and current_time is not None:
+                     try:
+                         clean = line.split(":")[1].strip().replace('(', '').replace(')', '')
+                         parts = clean.split()
+                         if len(parts) == 9:
+                             rot = [float(p) for p in parts]
+                             # Now commit the point
+                             # If we have a position recorded recently? 
+                             # Sim logs are sequential.
+                             # Time = ...
+                             # ...
+                             # CoM ...
+                             # Orientation ...
+                             if current_time is not None: # strict check
+                                 times.append(current_time)
+                                 # Use most recent pos or 0
+                                 # We need to make sure lists align.
+                                 # Simplified: just append what we have.
+                                 positions.append(current_pos if 'current_pos' in locals() else [0,0,0])
+                                 rotations.append(rot)
+                     except:
+                         pass
     except Exception as e:
         logger.warning(f"Error parsing log file: {e}")
         
-    # Return dummy rotations for now as we focus on Heave
-    return times, [[0,0,h] for h in heaves], rotations
+    return times, positions, rotations
 
 def save_csv(case_dir: Path, times, positions, rotations):
     """Saves parsed 6DoF data to CSV."""
@@ -94,7 +118,7 @@ def save_csv(case_dir: Path, times, positions, rotations):
 def update(frame, case_dir, output, auto_exit):
     log_file = case_dir / "log.interFoam"
     
-    times, positions, rotations = parse_sixdof_dat(case_dir)
+    times, positions, rotations = parse_log_file(case_dir)
     
     # Save to CSV
     if times:
