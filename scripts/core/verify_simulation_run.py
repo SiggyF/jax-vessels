@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 
 @click.command()
 @click.argument("case_dir", type=click.Path(exists=True, path_type=Path))
-@click.option("--max-courant", default=10.0, help="Maximum allowable Courant number")
+@click.option("--max-courant", default=1.0, help="Maximum allowable Courant number")
 @click.option("--min-dt", default=1e-4, help="Minimum allowable timestep")
 @click.option("--max-velocity", default=50.0, help="Maximum allowable velocity magnitude (Global)")
 @click.option("--max-velocity-hull", default=20.0, help="Maximum allowable velocity magnitude (Hull)")
