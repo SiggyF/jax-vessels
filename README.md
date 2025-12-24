@@ -45,6 +45,14 @@ The simulation utilizes a **body-fixed Eulerian reference frame**.
 *   **Moving Water**: The water flows past the hull with a defined velocity.
 *   This mimics a circulating water channel test and avoids dynamic mesh motion complexity.
 
+#### Coordinate System
+We follow standard naval architecture conventions aligned with OpenFOAM's default orientation:
+*   **Origin (0,0,0)**: Intersection of **Midship Section**, **Centerline**, and **Design Waterline**.
+*   **X-Axis (Longitudinal)**: Positive forward (Towards Bow). $x \in [-L/2, L/2]$.
+*   **Y-Axis (Transverse)**: Positive Port (to the left when looking forward). $y \in [-B/2, B/2]$.
+*   **Z-Axis (Vertical)**: Positive Up. $z=0$ is the Still Water Level (Draft line).
+*   **Units**: Meters ($m$).
+
 ### Shallow Water & Phase-Coupled Soft Start (New in v0.2.2)
 To simulate **realistic inland waterways** (rivers/canals):
 *   **Depth**: The domain is explicitly set to **10m** (z-min = -10).
@@ -62,6 +70,19 @@ To simulate **realistic inland waterways** (rivers/canals):
 ## Documentation
 *   [OpenFOAM Case Setup](docs/openfoam_setup.md): Explanation of the simulation template.
 *   [Test Case Templates](docs/templates/index.md): Detailed documentation of the specific templates.
+
+## Simulation Workflow
+
+The following Directed Acyclic Graph (DAG) illustrates the automated simulation pipeline managed by **Snakemake**:
+
+![Workflow DAG](dag.png)
+
+This workflow ensures:
+1.  **Hull Assembly**: Procedural generation and cleaning.
+2.  **Mesh Generation**: `snappyHexMesh` with quality checks.
+3.  **Hydrostatics**: Automated calculation of Mass and CoM.
+4.  **Simulation**: Robust 6DoF execution using the derived physical properties.
+5.  **Monitoring**: Real-time stability tracking.
 
 ## Running Test Cases
 

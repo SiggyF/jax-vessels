@@ -1,0 +1,77 @@
+functions
+{
+    forces
+    {
+        type            forces;
+        libs            ("libforces.so");
+        writeControl    timeStep;
+        writeInterval   1;
+        patches         (hull);
+        rho             rhoInf;
+        log             yes;
+        rhoInf          1025;
+        CofR            (67.5 0 2); // Update CofR to match CoM
+    }
+
+    sixDoFState
+    {
+        type            sixDoFRigidBodyMotionState;
+        libs            ("libsixDoFRigidBodyMotion.so");
+        writeControl    timeStep;
+        writeInterval   1;
+        velocity        yes;
+        acceleration    yes;
+        log             yes;
+    }
+
+    failFast
+    {
+        type            coded;
+        libs            ("libutilityFunctionObjects.so");
+        name            checkDeltaT;
+        code
+        #{
+             if (mesh.time().deltaTValue() < 1e-4)
+             {
+                 Info<< "Fatally aborting: deltaT (" << mesh.time().deltaTValue() 
+                     << ") is less than 1e-4." << endl;
+                 exit(1);
+             }
+        #};
+        writeControl    timeStep;
+        writeInterval   1;
+    }
+
+    minMaxU
+    {
+        type            fieldMinMax;
+        libs            ("libfieldFunctionObjects.so");
+        fields          (U);
+        mode            magnitude;
+        writeControl    timeStep;
+        writeInterval   1;
+        log             yes;
+    }
+
+    maxU_Hull
+    {
+        type            surfaceFieldValue;
+        libs            ("libfieldFunctionObjects.so");
+        writeControl    timeStep;
+        writeInterval   1;
+        log             yes;
+        writeFields     no;
+        regionType      patch;
+        name            hull;
+        operation       max;
+        fields          (U); 
+    }
+
+    sixDoFState
+    {
+        type            sixDoFRigidBodyMotionState;
+        libs            ("libsixDoFRigidBodyMotion.so");
+        outputControl   timeStep;
+        outputInterval  1;
+    }
+}

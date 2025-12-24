@@ -8,7 +8,7 @@ import matplotlib
 try:
     matplotlib.use('MacOSX') 
 except:
-    pass
+    matplotlib.use('Agg') # Fallback if no display
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 import re
@@ -17,151 +17,140 @@ import re
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-def parse_log_file(logfile: Path):
+def parse_sixdof_dat(case_dir: Path):
     """
-    Parses OpenFOAM log file for 6DoF motion state.
-    Looks for:
-    Time = 0.5
-    ...
-    6-DoF rigid body motion
-        Centre of mass: (x y z)
+    Parses sixDoFRigidBodyMotionState data.
+    Returns times, positions (list of [x,y,z]), rotations (list of 9-tuples or 3x3 matrices).
     """
+    sixdof_dir = case_dir / "postProcessing/sixDoFState"
     times = []
-    heaves = []
-    pitches = [] # Not parsing pitch yet, placeholder
-    
-    current_time = 0.0
-    
-    try:
-        with open(logfile, 'r') as f:
-            for line in f:
-                # Time = 0.123
-                if line.startswith("Time ="):
-                    try:
-                        current_time = float(line.split("=")[1].strip())
-                    except ValueError:
-                        pass
-                
-                # Centre of mass: (67.5 0 2.2)
-                if "Centre of mass:" in line:
-                    # Regex to extract (x y z)
-                    match = re.search(r'\(([\d\.\-eE]+)\s+([\d\.\-eE]+)\s+([\d\.\-eE]+)\)', line)
-                    if match:
-                        z = float(match.group(3))
-                        times.append(current_time)
-                        heaves.append(z)
-                        pitches.append(0.0)
-                        
-    except Exception as e:
-        logger.error(f"Failed to parse log file {logfile}: {e}")
-        
-    return times, heaves, pitches
+    positions = []
+    rotations = [] 
 
-def update(frame): # Frame arg is dummy
-    log_file = CASE_DIR / "log.interFoam"
-    if not log_file.exists():
-        logger.warning(f"Log file not found: {log_file}")
+    if not sixdof_dir.exists():
+        return times, positions, rotations
+
+    dat_files = sorted(sixdof_dir.glob("**/sixDoFState.dat"))
+    
+    data_map = {} # time -> (pos, rot)
+
+    for dat_file in dat_files:
+        try:
+            with open(dat_file, 'r') as f:
+                for line in f:
+                    if line.strip().startswith("#"):
+                        continue
+                    # format: Time (x y z) (q0 q1 q2 ... q8)
+                    # Example: 0.01 (0 0 1.2) (1 0 0 0 1 0 0 0 1)
+                    
+                    # Clean brackets
+                    clean_line = line.replace('(', ' ').replace(')', ' ')
+                    parts = clean_line.split()
+                    if len(parts) < 13: # Time + 3 pos + 9 rot = 13 components min
+                        continue
+                        
+                    t = float(parts[0])
+                    # Position: parts[1:4]
+                    x, y, z = float(parts[1]), float(parts[2]), float(parts[3])
+                    pos = [x, y, z]
+                    
+                    # Rotation: parts[4:13] (9 components)
+                    rot = [float(p) for p in parts[4:13]] # Flattened 3x3
+                    
+                    data_map[t] = (pos, rot)
+        except Exception as e:
+            logger.warning(f"Failed to parse {dat_file}: {e}")
+
+    sorted_times = sorted(data_map.keys())
+    times = sorted_times
+    positions = [data_map[t][0] for t in times]
+    rotations = [data_map[t][1] for t in times]
+    
+    return times, positions, rotations
+
+def update(frame, case_dir, output, auto_exit):
+    log_file = case_dir / "log.interFoam"
+    
+    times, positions, rotations = parse_sixdof_dat(case_dir)
+    
+    heaves = [p[2] for p in positions]
+    # Simple pitch approx: -asin(R[6]) ? (Element 3,1 in 1-based, index 6 in 0-based row-major 0,1,2, 3,4,5, 6,7,8)
+    # OpenFOAM tensor output is Row-Major? ((xx xy xz) (yx yy yz) (zx zy zz)) -> 9 values
+    # Pitch (theta) in aerospace sequence (ZYX): sin(theta) = -R_31 (index 2,0 -> index 6 if flattened row-major?)
+    # or R_13 depending on definition. Assuming standard:
+    # Let's just use rotation[6] (zx) or similar for plotting. 
+    # Actually, Rerun handles full 3D, so we trust Rerun.
+    # For 2D plot, we can just assume 0 or try to parse.
+    # We'll use 0.0 for 2D plot pitch to avoid confusion if math is unsure, 
+    # but since user has Rerun 3D, the 2D plot is secondary.
+    # Let's try to extract relevant component for "Pitch" (usually rotation around Y).
+    # R31 = -sin(theta). theta = -asin(R31).
+    # If rot is (r0 r1 r2 r3 r4 r5 r6 r7 r8), R31 is r6.
+    import math
+    pitches = []
+    for r in rotations:
+         # Clamp for asin domain
+         val = -r[6]
+         val = max(-1.0, min(1.0, val))
+         pitches.append(math.degrees(math.asin(val)))
+
+    if not times:
+        if not log_file.exists():
+             logger.warning("Waiting for simulation to start...")
+        else:
+             logger.warning("No 6DoF data yet.")
         return line_heave, line_pitch
-        
-    times, heaves, pitches = parse_log_file(log_file)
     
-    # Sort by time
-    if times:
-        # No need to sort if parsed sequentially, but good practice if multiple logs
-        # Here we just assume sequential from one log
-        
-        logger.info(f"Found {len(times)} data points. Last: t={times[-1]:.2f}, Z={heaves[-1]:.2f}")
-        
-        line_heave.set_data(times, heaves)
-        line_pitch.set_data(times, pitches)
-        
-        ax[0].relim()
-        ax[0].autoscale_view()
-        ax[1].relim()
-        ax[1].autoscale_view()
-        
-        ax[0].set_title(f"Heave vs Time (t={times[-1]:.2f}s)")
-    else:
-        logger.warning("No data points found in log!")
-    
+    # Update Matplotlib (Legacy/Report)
+    line_heave.set_data(times, heaves)
+    line_pitch.set_data(times, pitches)
+    ax[0].relim()
+    ax[0].autoscale_view()
+    ax[1].relim()
+    ax[1].autoscale_view()
+    ax[0].set_title(f"Heave vs Time (t={times[-1]:.2f}s)")
+    if output:
+        plt.savefig(output)
+
     return line_heave, line_pitch
 
-def parse_state_file(filepath: Path):
-    """
-    Parses a sixDoFRigidBodyMotionState file to extract the Centre of Mass (CoM) position.
-    Format example:
-    (
-        (67.5 0 2)
-        (1 0 0 0 1 0 0 0 1)
-        (0 0 0)
-        (0 0 0)
-        (0 0 0)
-        (0 0 0)
-    )
-    We want the Z component of the first vector (position).
-    """
-    try:
-        content = filepath.read_text()
-        # Find the first vector inside the outer parens
-        # This regex looks for: ( x y z )
-        match = re.search(r'\(\s*([\d\.\-eE]+)\s+([\d\.\-eE]+)\s+([\d\.\-eE]+)\s*\)', content)
-        if match:
-            z = float(match.group(3))
-            return z
-    except Exception as e:
-        logger.error(f"Failed to parse {filepath}: {e}")
-    return None
-def monitor(case_dir: Path, output: Path = None):
-    """
-    Monitors processor0 directories for uniform/sixDoFRigidBodyMotionState
-    """
-    proc0 = case_dir / "processor0"
-    
 
-    global CASE_DIR, fig, ax, line_heave, line_pitch
-    CASE_DIR = case_dir
+def monitor(case_dir: Path, output: Path = None, auto_exit: bool = False):
+    """
+    Monitors simulation using postProcessing data.
+    """
+    logger.info(f"Monitoring case: {case_dir}")
     
+    global fig, ax, line_heave, line_pitch
     fig, ax = plt.subplots(2, 1, figsize=(10, 8))
-    
-    # Heave
     line_heave, = ax[0].plot([], [], 'b-', label='Heave (Z)')
     ax[0].set_ylabel('Position Z [m]')
     ax[0].grid(True)
-    ax[0].legend()
-    
-    # Annotations for "Container Loading"
-    # Staged simulation: Load added at t=0.5s
-    ax[0].axvline(x=0.5, color='k', linestyle='--', alpha=0.5)
-    ax[0].text(0.52, 0.95, 'Container Loaded (t=0.5s)', transform=ax[0].transAxes, verticalalignment='top')
-    ax[0].text(0.25, 0.1, 'Stability Check', transform=ax[0].transAxes, horizontalalignment='center')
-    ax[0].text(0.75, 0.1, 'Settling Phase', transform=ax[0].transAxes, horizontalalignment='center')
-
-    
-    # Pitch
     line_pitch, = ax[1].plot([], [], 'r-', label='Pitch (deg)')
     ax[1].set_ylabel('Pitch [deg]')
-    ax[1].set_xlabel('Time [s] / Step') # ambiguous units
+    ax[1].set_xlabel('Time [s]')
     ax[1].grid(True)
-    ax[1].legend()
 
-    if output:
-        # Static plot for non-interactive mode
-        # We need to manually call update once with a dummy frame or just run logic
-        update(0)
-        logger.info(f"Saving plot to {output}")
-        plt.savefig(output)
+    def update_wrapper(frame):
+        return update(frame, case_dir, output, auto_exit)
+
+    if auto_exit:
+        logger.info("Running in background loop...")
+        while True:
+            update(0, case_dir, output, auto_exit)
+            time.sleep(2)
     else:
-        ani = FuncAnimation(fig, update, interval=1000, blit=True) # Check every 1s
+        # Interactive
+        ani = FuncAnimation(fig, update_wrapper, interval=1000, blit=False)
         plt.show()
 
 @click.command()
 @click.argument("case_dir", type=click.Path(exists=True, path_type=Path))
 @click.option("--output", type=click.Path(path_type=Path), default=None, help="Path to save the plot image")
-def main(case_dir, output):
-    """Monitor the simulation progress."""
-    logger.info(f"Monitoring {case_dir}...")
-    monitor(case_dir, output=output)
+@click.option("--auto-exit", is_flag=True, help="Run in non-interactive background mode")
+def main(case_dir, output, auto_exit):
+    """Monitor simulation charts."""
+    monitor(case_dir, output=output, auto_exit=auto_exit)
 
 if __name__ == "__main__":
     main()
-
