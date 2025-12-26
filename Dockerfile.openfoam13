@@ -1,0 +1,49 @@
+# Dockerfile.foundation
+# Builds OpenFOAM 13 from the OpenFOAM Foundation based on Ubuntu 24.04
+
+FROM ubuntu:24.04 AS base
+ENV DEBIAN_FRONTEND=noninteractive
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    curl \
+    wget \
+    gnupg2 \
+    lsb-release \
+    software-properties-common \
+    sudo \
+    git \
+    vim \
+    && rm -rf /var/lib/apt/lists/*
+
+# Add OpenFOAM.org Repository
+RUN sh -c "wget -O - https://dl.openfoam.org/gpg.key | apt-key add -" && \
+    add-apt-repository http://dl.openfoam.org/ubuntu && \
+    apt-get update
+
+# Install OpenFOAM 13
+RUN apt-get install -y openfoam13 && \
+    rm -rf /var/lib/apt/lists/*
+
+# Source OpenFOAM environment
+RUN echo ". /opt/openfoam13/etc/bashrc" >> /etc/bash.bashrc
+ENV BASH_ENV="/etc/bash.bashrc"
+
+# Create a non-root user 'openfoam' with sudo access (optional but good practice)
+RUN useradd -m -s /bin/bash openfoam && \
+    usermod -aG sudo openfoam && \
+    echo "openfoam ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+
+# Set working directory permissions
+RUN mkdir -p /app && chown -R openfoam:openfoam /app
+
+USER openfoam
+WORKDIR /app
+
+# Entrypoint to source environment properly
+COPY --chown=openfoam:openfoam scripts/entrypoint_openfoam13.sh /usr/local/bin/docker-entrypoint.sh
+RUN sudo chmod +x /usr/local/bin/docker-entrypoint.sh
+
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
+CMD ["/bin/bash"]
