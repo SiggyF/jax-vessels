@@ -115,7 +115,7 @@ rule run_simulation:
     output:
         log=str(BUILD_DIR / "{hull}_{wave}_{motion}_{load}" / "log.interFoam"),
         plot=str(BUILD_DIR / "{hull}_{wave}_{motion}_{load}" / "monitor_plot.png")
-    threads: 6
+    threads: 8
     params:
         hull_dir=str(BUILD_DIR / "{hull}"),
         func_file=lambda w: f"functions.{w.motion}",
@@ -133,6 +133,16 @@ rule run_simulation:
         cp $CASE_DIR/system/include/{params.func_file} $CASE_DIR/system/include/functions_active
         cp $CASE_DIR/system/include/{params.mesh_file} $CASE_DIR/constant/dynamicMeshDict
         cp $CASE_DIR/system/include/{params.sf_file} $CASE_DIR/system/include/setFields_active
+
+        # Handle Wave Properties (Issue #26)
+        if [ "{wildcards.wave}" == "regular" ]; then
+            # Copy waveProperties
+            cp templates/floating_hull/constant/waveProperties $CASE_DIR/constant/
+            
+            # Revert to wave templates for U and alpha.water
+            cp templates/floating_hull/0/U.waves $CASE_DIR/0/U
+            cp templates/floating_hull/0/alpha.water.waves $CASE_DIR/0/alpha.water
+        fi
 
         # Patch Dynamic Mesh with Hull Properties (CoM, Mass)
         uv run python scripts/core/configure_case.py --report {input.check} --dict $CASE_DIR/constant/dynamicMeshDict
@@ -156,7 +166,8 @@ rule run_simulation:
         ./scripts/utils/run_openfoam_docker.sh decomposePar -case $CASE_DIR -force
         
         # Run Parallel Solver
-        ./scripts/utils/run_openfoam_docker.sh mpirun -np 6 interFoam -parallel -case $CASE_DIR > {output.log}
+        ./scripts/utils/run_openfoam_docker.sh mpirun -np 8 interFoam -parallel -case $CASE_DIR > {output.log}
+
         
         # Reconstruct (Optional during run, but good for post-processing)
         # We might do this after? No, keeping it simple.
@@ -174,14 +185,13 @@ rule verify_run:
     input:
         log=str(BUILD_DIR / "{hull}_{wave}_{motion}_{load}" / "log.interFoam")
     output:
+        report=str(BUILD_DIR / "{hull}_{wave}_{motion}_{load}" / "verification_report.json"),
         marker=str(BUILD_DIR / "{hull}_{wave}_{motion}_{load}" / "verification_passed")
     shell:
         """
         # Run verification script
-        # case_dir is parent of log file
-        # case_dir is parent of log file
         CASE_DIR={BUILD_DIR}/{wildcards.hull}_{wildcards.wave}_{wildcards.motion}_{wildcards.load}
-        uv run python scripts/core/verify_simulation_run.py $CASE_DIR
+        uv run python scripts/core/verify_simulation_run.py $CASE_DIR --output {output.report}
         touch {output.marker}
         """
 
@@ -189,15 +199,19 @@ rule post_process:
     input:
         log=str(BUILD_DIR / "{hull}_{wave}_{motion}_{load}" / "log.interFoam"),
         plot=str(BUILD_DIR / "{hull}_{wave}_{motion}_{load}" / "monitor_plot.png"),
-        verification=str(BUILD_DIR / "{hull}_{wave}_{motion}_{load}" / "verification_passed")
+        verification=str(BUILD_DIR / "{hull}_{wave}_{motion}_{load}" / "verification_passed"),
+        report=str(BUILD_DIR / "{hull}_{wave}_{motion}_{load}" / "verification_report.json")
     output:
         str(BUILD_DIR / "{hull}_{wave}_{motion}_{load}" / "report.html")
     shell:
         """
-        echo "<html><body><h1>Report for {wildcards.hull} ({wildcards.wave}, {wildcards.motion}, {wildcards.load})</h1>" > {output}
-        echo "<p>Verification Passed.</p>" >> {output}
-        echo "<img src='monitor_plot.png'/>" >> {output}
-        echo "<pre>" >> {output}
-        tail -n 50 {input.log} >> {output}
-        echo "</pre></body></html>" >> {output}
+        uv run python scripts/utils/generate_report.py \
+            --json {input.report} \
+            --log {input.log} \
+            --plot {input.plot} \
+            --output {output} \
+            --hull {wildcards.hull} \
+            --wave {wildcards.wave} \
+            --motion {wildcards.motion} \
+            --load {wildcards.load}
         """

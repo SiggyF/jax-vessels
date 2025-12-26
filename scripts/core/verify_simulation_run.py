@@ -9,12 +9,15 @@ logger = logging.getLogger(__name__)
 
 @click.command()
 @click.argument("case_dir", type=click.Path(exists=True, path_type=Path))
-@click.option("--max-courant", default=10.0, help="Maximum allowable Courant number")
+@click.option("--max-courant", default=1.0, help="Maximum allowable Courant number")
 @click.option("--min-dt", default=1e-4, help="Minimum allowable timestep")
 @click.option("--max-velocity", default=50.0, help="Maximum allowable velocity magnitude (Global)")
 @click.option("--max-velocity-hull", default=20.0, help="Maximum allowable velocity magnitude (Hull)")
-def verify(case_dir, max_courant, min_dt, max_velocity, max_velocity_hull):
+@click.option("--output", required=True, type=click.Path(path_type=Path), help="Output JSON report")
+def verify(case_dir, max_courant, min_dt, max_velocity, max_velocity_hull, output):
     """Verifies OpenFOAM simulation logs for stability and physical checks."""
+    import json
+    
     log_file = case_dir / "log.interFoam"
     if not log_file.exists():
         logger.error(f"Log file not found: {log_file}")
@@ -27,15 +30,10 @@ def verify(case_dir, max_courant, min_dt, max_velocity, max_velocity_hull):
     # regex patterns
     re_courant = re.compile(r"Courant Number mean: .+ max: ([\d\.eE\+\-]+)")
     re_dt = re.compile(r"deltaT = ([\d\.eE\+\-]+)")
-    re_minmax_u = re.compile(r"fieldMinMax minMaxU output:.*max\(U\) = ([\d\.eE\+\-]+)") # Simplified if magnitude mode
-    # If mode magnitude: output is "min = ... max = ..."
-    # Check log format for fieldMinMax magnitude:
     # "fieldMinMax minMaxU output: min = 0 max = 1.234"
     re_minmax_u_mag = re.compile(r"fieldMinMax minMaxU output:.*max = ([\d\.eE\+\-]+)")
     
     # surfaceFieldValue maxU_Hull
-    # "surfaceFieldValue maxU_Hull output: max(U) = (1.2 0.3 0)"
-    # We parse vector and take mag
     re_hull_u = re.compile(r"surfaceFieldValue maxU_Hull output:.*max\(U\) = \(([\d\.eE\+\-]+)\s+([\d\.eE\+\-]+)\s+([\d\.eE\+\-]+)\)")
 
     # Tracking max values encountered
@@ -51,9 +49,6 @@ def verify(case_dir, max_courant, min_dt, max_velocity, max_velocity_hull):
             if m:
                 c = float(m.group(1))
                 peak_courant = max(peak_courant, c)
-                if c > max_courant:
-                    # We might log every violation, but just tracking peak is enough for summary
-                    pass
 
             # DeltaT
             m = re_dt.search(line)
@@ -95,10 +90,34 @@ def verify(case_dir, max_courant, min_dt, max_velocity, max_velocity_hull):
     logger.info(f"Peak U (Hull):{peak_u_hull:.2f}")
     logger.info("-" * 40)
 
+    report_data = {
+        "case_dir": str(case_dir),
+        "metrics": {
+            "peak_courant": peak_courant,
+            "min_delta_t": min_encountered_dt,
+            "peak_u_global": peak_u_global,
+            "peak_u_hull": peak_u_hull
+        },
+        "limits": {
+            "max_courant": max_courant,
+            "min_dt": min_dt,
+            "max_velocity": max_velocity,
+            "max_velocity_hull": max_velocity_hull
+        },
+        "issues": issues,
+        "status": "FAILED" if issues else "PASSED"
+    }
+
+    with open(output, 'w') as f:
+        json.dump(report_data, f, indent=2)
+
     if issues:
         logger.error("Verification FAILED:")
         for i in issues:
             logger.error(f"  - {i}")
+        # We exit with 0 to allow Snakemake to proceed if we want to record the failure in the report,
+        # but usually verification failure should stop the pipeline or be handled.
+        # For now, let's exit with 1 if it fails to ensure we notice.
         sys.exit(1)
     else:
         logger.info("Verification PASSED")

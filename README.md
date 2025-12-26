@@ -60,8 +60,13 @@ To simulate **realistic inland waterways** (rivers/canals):
 *   **Soft Start**: The inlet velocity ramps from 0 to target (e.g., 2 m/s) over 10s to prevent impulse shocks.
 *   **Phase Coupling**: Air velocity is strictly zeroed at the inlet ($U_{air} = 0$), while water follows the ramp ($U_{water} \propto \alpha \cdot t$). This prevents unphysical high-speed air currents.
 
-![Numerical Scheme Mesh](docs/mesh_slice.png)
-*Figure: Cross-section of the mesh generation showing the immersed boundary representation.*
+![Numerical Scheme Mesh](docs/mesh_transparent.png)
+*Figure: Transparent view of the mesh ensuring valid hull resolution (~18% of cells below waterline).*
+
+### Grid Resolution Statistics
+*   **Total Cells**: 966,227
+*   **Below Waterline** ($z < 1.42m$): 175,219 (~18.1%)
+*   **Above Waterline** ($z \ge 1.42m$): 791,008 (~81.9%)
 
 ### Visual Showcase
 ![Streamlines](docs/showcase_streamlines.png)
@@ -324,6 +329,44 @@ OpenFOAM v2406 refuses to load shared objects (dynamic libraries) if they were c
 - **Symptom**: `Exit code 139` (Segfault) or `cannot open shared object file`.
 - **Solution**: The Dockerfile now defaults to the `ubuntu` user. Ensure all OpenFOAM artifacts are owned by the non-root user.
 
+### OpenFOAM Version Compatibility (Foundation vs ESI)
+This project primarily uses **OpenFOAM ESI (v2406)** for the main analysis workflow. However, we also support **OpenFOAM Foundation (v13)** for running standard tutorials compatibility-free.
+
+#### Running Foundation Tutorials (e.g., DTCHullWave)
+To run cases designed for OpenFOAM.org (Foundation) versions without porting dictionarie, use the `jax-vessels:openfoam13` container:
+
+1.  **Build the Container**:
+    ```bash
+    docker build -f Dockerfile.openfoam13 -t jax-vessels:openfoam13 .
+    ```
+2.  **Run Commands**:
+    Use the wrapper script `scripts/utils/run_openfoam13_docker.sh` to execute commands in this environment.
+    ```bash
+    # Example: Running the DTC Hull Baseline
+    ./scripts/utils/run_openfoam13_docker.sh ./Allmesh
+    ./scripts/utils/run_openfoam13_docker.sh ./Allrun
+    ```
+
+> [!NOTE]
+> The ESI and Foundation versions have different dictionary syntaxes (e.g., `triSurfaceMesh` vs `triSurface`). Do not mix cases between containers without porting.
+
+#### Docker Container Naming Scheme
+We use a strict `name:version` tagging scheme to distinguish between build environments:
+-   **Image Name**: `jax-vessels` (Consistent across all versions)
+-   **Tags**:
+    -   `:openfoam2406` - Default ESI OpenFOAM v2406 environment (used for main analysis).
+    -   `:openfoam13` - OpenFOAM Foundation v13 environment (used for compatibility with standard tutorials).
+    -   `:latest` - Aliased to the default environment (`:openfoam2406`).
+
+**Example Build Commands**:
+```bash
+# Build main ESI image
+docker build -t jax-vessels:openfoam2406 .
+
+# Build Foundation image
+docker build -f Dockerfile.openfoam13 -t jax-vessels:openfoam13 .
+```
+
 ### 6DoF Instability ("Rocket Launch")
 If the initial water level (`0/include/setFields.still`) creates more buoyancy than the hull's mass, the solver will experience a massive upward force at $t=0$, causing immediate divergence (velocities > $10^{6}$ m/s).
 - **Diagnosis**: Run `scripts/verify_hydrostatics.py` on your hull STL.
@@ -333,6 +376,17 @@ If the initial water level (`0/include/setFields.still`) creates more buoyancy t
   uv run scripts/utils/verify_hydrostatics.py verification_run/matrix_6dof_staged
   ```
 - **Note**: Empirical tests show OpenFOAM often requires ~10cm more draft than calculated analytically due to mesh discretization differences. The script uses a `+0.10m` offset by default.
+
+### OpenFOAM Approach Summary & Trade-offs
+We successfully switched to **OpenFOAM 13 (Foundation)** for validating the `DTCHullWave` tutorial. This choice involved the following trade-offs:
+
+1.  **Stability (Winner: OpenFOAM 13)**: The native environment runs standard tutorials "out of the box" without mesh crashes (e.g., fixed the `snappyHexMesh` "bad size" error).
+2.  **Features (Winner: ESI v2406)**: The Foundation version is older/stricter. It lacks modern conveniences like `refineMesh` integration in `snappyHexMesh` and uses older dictionary syntax.
+3.  **Integration**:
+    *   **Current**: Standalone script (`scripts/utils/run_openfoam13.sh`).
+    *   **Future**: Snakemake integration requires maintaining parallel template sets (one for ESI, one for Foundation) due to syntax incompatibilities.
+
+**Conclusion**: Use the `jax-vessels:openfoam13` container for verifying baseline physics. Use `jax-vessels:openfoam2406` for new development.
 
 ## Project Structure
 

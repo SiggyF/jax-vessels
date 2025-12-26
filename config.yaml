@@ -13,6 +13,11 @@ cases:
     motion: "floating"
     load: "empty"
 
+  - hull: "wigley"
+    wave: "regular" # Regular waves
+    motion: "floating"
+    load: "empty"
+
   # - hull: "barge_simple"
 # ...
 
